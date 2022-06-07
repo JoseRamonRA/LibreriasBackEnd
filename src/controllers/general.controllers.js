@@ -1,4 +1,5 @@
 const chalk = require('chalk');
+const res = require('express/lib/response');
 const path = require ('path');
 
 const general={
@@ -59,6 +60,8 @@ const general={
         res.json(arr)
     })
     },
+
+
     getfiles2 : async (req,res)=>{
         const fs2 = require('fs');
 
@@ -77,16 +80,25 @@ const general={
             }catch(e){}
 
             if(dataFile){
-                var ne = new person(ls[i].split(".",1).toString(), ls[i].split(".").pop(),`${urls}${ls[i]}`,dataFile.isDirectory());
+                var ne = new person(ls[i].split(".",1).toString(), ls[i].split(".").pop(),`${urls}${ls[i]}`,dataFile.isDirectory(),"PCQ0110-01","procedure","calidad","press","#154546","spanish","2022-05-05",2,"nomvember 10,21");
                 arr.push(ne);
              }
         }
         
-        function person(nam,ext,url,dir){
+        function person(nam,ext,url,dir,cod,tdo,are,sho,nor,len,fev,ane,mod){
         this.name= nam;
         this.ext = ext;
         this.url = url;
         this.dir = dir;
+        this.cod = cod;
+        this.tdo = tdo;
+        this.are = are;
+        this.sho = sho;
+        this.nor = nor;
+        this.len = len;
+        this.fev = fev;
+        this.ane = ane;
+        this.mod = mod;
         }
 
 
@@ -152,16 +164,25 @@ const general={
             }catch(e){}
 
             if(dataFile){
-                var ne = new person(ls[i].split(".",1).toString(), ls[i].split(".").pop(),`${urls}${ls[i]}`,dataFile.isDirectory());
+                var ne = new person(ls[i].split(".",1).toString(), ls[i].split(".").pop(),`${urls}${ls[i]}`,dataFile.isDirectory(),"PCQ0110-01","procedure","calidad","press","#154546","spanish","2022-05-05",2,"nomvember 10,21");
                 arr.push(ne);
              }
         }
         
-        function person(nam,ext,url,dir){
+        function person(nam,ext,url,dir,cod,tdo,are,sho,nor,len,fev,ane,mod){
         this.name= nam;
         this.ext = ext;
         this.url = url;
         this.dir = dir;
+        this.cod = cod;
+        this.tdo = tdo;
+        this.are = are;
+        this.sho = sho;
+        this.nor = nor;
+        this.len = len;
+        this.fev = fev;
+        this.ane = ane;
+        this.mod = mod;
         }
 
 
@@ -216,7 +237,92 @@ const general={
         console.log(rutas)
         fs.mkdirSync(`./uploads/${rutas}`,{recursive:true});
         res.json("ruta creada");
+    },
+
+    postrename:async (req,res)=>{
+        var name = req.body.namenew;
+        var ext = req.body.ext;
+        var old = req.body.old;
+        var rut = req.body.rutenv;
+
+        console.log(name,ext,old,"ruta=",rut)
+
+        if(ext != 'pdf' && ext!='docx' && ext!="doc" && ext!="xlsx" && ext!="xls" && ext!="jpg" && ext!="png"){
+            ext="";
+        }else{
+            ext="."+ext;
+        }
+
+        const fs = require('fs');
+        console.log(name);
+        fs.rename(`./uploads/${rut}${old}${ext}`, `./uploads/${rut}${name}${ext}`, (err) => {
+            if (err) throw err;
+            console.log('renamed complete');
+        });
+
+        res.json("renamed")
+    },
+
+    postdelate:async (req,res)=>{
+
+        var name = req.body.name;
+        var ext = req.body.ext;
+        var rut = req.body.rut;
+        var dir = req.body.dir;
+
+        if(rut==""){
+            rut="";
+        }else{
+            rut = rut+"/";
+        }
+        console.log(name,ext,rut,dir)
+
+        if(ext != 'pdf' && ext!='docx' && ext!="doc" && ext!="xlsx" && ext!="xls" && ext!="jpg" && ext!="png"){
+            ext="";
+        }else{
+            ext="."+ext;
+        }
+
+        
+        const fs=require("fs");
+        const p=require("path");
+        let path=p.join(`./uploads/${rut}${name}`);
+
+
+        try{
+            if(dir){
+                deleteFolder(path);
+                var mensaje = "Carpeta Eliminada"
+            }else{
+                fs.unlinkSync(`./uploads/${rut}${name}${ext}`);
+                var mensaje = "Archivo Eliminado"
+            }
+        }catch(e){
+
+        }
+        
+        function deleteFolder(path) {
+            let files = [];
+            if( fs.existsSync(path) ) {
+                files = fs.readdirSync(path);
+                files.forEach(function(file,index){
+                    let curPath = path + "/" + file;
+                    if(fs.statSync(curPath).isDirectory()) {
+                        deleteFolder(curPath);
+                    } else {
+                        fs.unlinkSync(curPath);
+                    }
+                });
+                fs.rmdirSync(path);
+            }
+        }
+
+        res.json(mensaje);
     }
+
+
+
+
 }
 
 module.exports = general;
