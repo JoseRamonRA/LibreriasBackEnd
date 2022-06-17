@@ -3,8 +3,11 @@ import { Router } from 'express';
 const router = Router();
 
 const generalroutes = require ("./general.routes");
+const hoe = require('./hoe');
 
-//students
 router.use('/general',generalroutes);
+
+//Para las peticiones de HOE
+router.use('/HOE',hoe);
 
 module.exports = router;

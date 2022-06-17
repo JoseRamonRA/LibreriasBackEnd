@@ -1,7 +1,9 @@
 const chalk = require('chalk');
 const res = require('express/lib/response');
 const path = require ('path');
-
+const { 
+    infoDocumentos
+} = require('./funciones');
 const general={
 
     hello: async (req,res) =>{
@@ -70,7 +72,9 @@ const general={
         const urls = "http://localhost:4000/uploads/";
 
         var ls =fs2.readdirSync("./uploads");
-
+        let Archivos = await  new infoDocumentos();
+        let datosArchivos = Archivos['recordset'];
+        //console.log(datosArchivos);
         for(var i=0;i<ls.length;i++){
             const file  = path.join("./uploads",ls[i]);
             var dataFile =null;
@@ -80,12 +84,22 @@ const general={
             }catch(e){}
 
             if(dataFile){
-                var ne = new person(ls[i].split(".",1).toString(), ls[i].split(".").pop(),`${urls}${ls[i]}`,dataFile.isDirectory(),"PCQ0110-01","procedure","calidad","press","#154546","spanish","2022-05-05",2,"nomvember 10,21");
-                arr.push(ne);
+                if(ls[i].indexOf('Â§')>-1){
+                    let dat = ls[i].split("Â§");
+                    let id = Number(dat[0]);
+                    let archivoHOE = datosArchivos.find(element => { return element.ID_DOC == id });
+                
+                    var ne = new person(dat[1], ls[i].split(".").pop(),`${urls}${ls[i]}`,dataFile.isDirectory(),archivoHOE.HOE_Code,archivoHOE.Document_Type_Hoe,"calidad","press",archivoHOE.No_Rev,"Ingles","2022-05-05",2,archivoHOE.Fecha_Modificacion,archivoHOE.ID_Revisor1,archivoHOE.ID_Revisor2,archivoHOE.ID_Revisor3,archivoHOE.ID_UserModifico,archivoHOE.Estatus);
+                    arr.push(ne);
+                }else{
+                    var ne = new person(ls[i].split(".",1).toString(), ls[i].split(".").pop(),`${urls}${ls[i]}`,dataFile.isDirectory(),"PCQ0110-01","procedure","calidad","press","N","spanish","2022-05-05",2,"november 10,21",0,0,0,0,0);
+                    arr.push(ne);
+                }
+                
              }
         }
         
-        function person(nam,ext,url,dir,cod,tdo,are,sho,nor,len,fev,ane,mod){
+        function person(nam,ext,url,dir,cod,tdo,are,sho,nor,len,fev,ane,mod,rev1,rev2,rev3,modifica,estatus){
         this.name= nam;
         this.ext = ext;
         this.url = url;
@@ -99,6 +113,11 @@ const general={
         this.fev = fev;
         this.ane = ane;
         this.mod = mod;
+        this.rev1 = rev1;
+        this.rev2 = rev2;
+        this.rev3 = rev3;
+        this.modifica = modifica;
+        this.estatus = estatus;
         }
 
 
