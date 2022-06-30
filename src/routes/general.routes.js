@@ -8,6 +8,15 @@ const {
     newroute,
     postrename,
     postdelate,
+    searchsimple,
+    orderby,
+    deleterecycle,
+    restaurararch,
+    deleteflujo,
+    deletetask,
+    deletearch,
+    gettask,
+    updatepropi
     
 } = require('../controllers/general.controllers')
 
@@ -17,6 +26,16 @@ router.post('/postrute',postrute);
 router.post('/newroute',newroute);
 router.post('/names',postrename);
 router.post('/delate',postdelate);
+router.post('/search',searchsimple);
+router.post('/orderby',orderby)
+router.post('/deleterecycle',deleterecycle)
+router.post('/restaurar',restaurararch)
+router.post('/deleteflujo',deleteflujo)
+router.post('/deletetask',deletetask)
+router.post('/deletearch',deletearch)
+router.post('/gettask',gettask)
+router.post('/updatepropi',updatepropi)
+
 router.get('/',hello);
 
 
