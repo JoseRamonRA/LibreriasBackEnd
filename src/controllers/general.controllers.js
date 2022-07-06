@@ -575,7 +575,105 @@ const general={
             message: `No se pudo haceer tu consulta fallo la base de datos `
             })
         }
-    }
+    },
+
+    getencabe:async (req,res)=>{
+        try{
+            const aux = await new sql.Request();
+            const resu = await aux.query(`select * from encabezados;`)
+            
+            if(!resu){
+                return res.json({
+                    success: false,
+                    message: "Mo se completo la operacion"
+                })
+            }
+    
+            return res.json({
+                success: true,
+                res:resu.recordsets[0],
+                message: `Devuelvo encabezados!!`
+            })
+    
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`getencabe`))
+    
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos `
+            })
+        }
+    },
+
+    updatencabe:async (req,res)=>{
+        console.log(req.body)
+
+        if(req.body.visi==true){
+            req.body.visi=1;
+        }else{
+            req.body.visi=0;
+        }
+
+        console.log(req.body.visi);
+
+        try{
+            const aux = await new sql.Request();
+            const resu = await aux.query(`update encabezados set numerlu=${req.body.nume}, visible=${req.body.visi} where Id=${req.body.id};`)
+            
+            if(!resu){
+                return res.json({
+                    success: false,
+                    message: "Mo se completo la operacion"
+                })
+            }
+    
+            return res.json({
+                success: true,
+                message: `Propiedades actualizadas ID_doc=${req.body.id}!!`
+            })
+    
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`updateencabe`))
+    
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos `
+            })
+        }
+    },
+
+    getencabeorder:async (req,res)=>{
+        try{
+            const aux = await new sql.Request();
+            const resu = await aux.query(`select * from encabezados where visible=1 order by numerlu;`)
+            if(!resu){
+                return res.json({
+                    success: false,
+                    message: "Mo se completo la operacion"
+                })
+            }
+
+            
+            return res.json({
+                success: true,
+                res:resu.recordsets[0],
+                message: `Devuelvo encabezados!!`
+            })
+    
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`getencabeordery`))
+    
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos `
+            })
+        }
+    },
+
+
 
 
 
