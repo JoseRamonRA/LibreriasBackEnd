@@ -19,7 +19,8 @@ const {
     updatepropi,
     getencabe,
     updatencabe,
-    getencabeorder
+    getencabeorder,
+    movefiledir
     
 } = require('../controllers/general.controllers')
 
@@ -41,6 +42,7 @@ router.post('/deletearch',deletearch)
 router.post('/gettask',gettask)
 router.post('/updatepropi',updatepropi)
 router.post('/updateenca',updatencabe)
+router.post('/move',movefiledir)
 
 router.get('/',hello);
 

@@ -144,8 +144,6 @@ const general={
 
     postrute: async (req,res)=>{
         
-        console.log(req.body.ruta);
-
         var arr= [];
         const fs2 = require('fs');
         const urls = `http://localhost:4000/uploads/${req.body.ruta}/`;
@@ -549,8 +547,6 @@ const general={
     updatepropi:async (req,res)=>{
         try{
 
-        console.log(req.body);
-
             const aux = await new sql.Request();
             const resu = await aux.query(`update Documentos set Nombre='${req.body.name}', ID_Revisor1=${req.body.rev1},ID_Revisor2=${req.body.rev2},ID_Revisor3=${req.body.rev3}, Document_Type_Hoe='${req.body.secu}',No_Rev='${req.body.nore}',HOE_Code='${req.body.hoec}', Fecha_Modificacion=(CURRENT_TIMESTAMP) ,ID_UserModifico='${req.body.idcont}' where ID_DOC=${req.body.id}`)
             
@@ -673,9 +669,29 @@ const general={
         }
     },
 
+    movefiledir:async(req,res)=>{
+
+        console.log(req.body)
+  
+        const fs = require('fs-extra')
+        // Source file
+        const src = `./uploads/${req.body.move}`;
+        
+        // Destination path
+        const dest = `./uploads/${req.body.desti}/${req.body.nameid}`;
+        
+        // Function call
+        // Using call back function
+        fs.move(src, dest, (err) => {
+        if (err) return console.log(err);
+        console.log(`File successfully moved!!`);
+        });
+
+        res.json("simon")
+    },
 
 
-
+    
 
 
 }
