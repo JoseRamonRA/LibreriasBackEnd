@@ -142,6 +142,101 @@ const general={
         res.json(arr2)
     },
 
+    postfileid:async(req,res)=>{
+
+        var enviar=[];
+        var docpre=[];
+
+        var iddoc=req.body.idoc;
+        var band=false;
+
+        let Archivos = await  new infoDocumentos();
+        let datosArchivos = Archivos['recordset'];
+
+
+        const path = require('path');
+        const fs = require('fs');
+
+        var data=[];
+
+        function scanDirs(directoryPath){
+        try{
+            var ls=fs.readdirSync(directoryPath);
+
+            for (let index = 0; index < ls.length; index++) {
+                const file = path.join(directoryPath, ls[index]);
+                var dataFile =null;
+                try{
+                    dataFile =fs.lstatSync(file);
+                }catch(e){}
+
+                if(dataFile){
+                    data.push(
+                    {
+                        path: `http://localhost:4000\\${file}`,
+                        isDirectory: dataFile.isDirectory(),
+                    });
+
+                    if(dataFile.isDirectory()){
+                    scanDirs(file)
+                    }
+                }
+            }
+        }catch(e){}
+        }
+        function document(id,nam,ext,url,dir,cod,tdo,are,sho,nor,len,fev,ane,mod,rev1,rev2,rev3,modifica,estatus){
+            this.id=id;
+            this.name= nam;
+            this.ext = ext;
+            this.url = url;
+            this.dir = dir;
+            this.cod = cod;
+            this.tdo = tdo;
+            this.are = are;
+            this.sho = sho;
+            this.nor = nor;
+            this.len = len;
+            this.fev = fev;
+            this.ane = ane;
+            this.mod = mod;
+            this.rev1 = rev1;
+            this.rev2 = rev2;
+            this.rev3 = rev3;
+            this.modifica = modifica;
+            this.estatus = estatus;
+        }
+
+        scanDirs('./uploads');
+
+        for(var i=0;i<data.length;i++){
+            var otro =data[i].path.split('\\').pop()
+            var comp=otro.split('Â§',1).toString()
+
+            if(iddoc==comp){
+                band=true;
+                docpre=data[i];
+                var join=docpre.path.split('\\')
+                docpre.path=join.join('/')
+                let archivoHOE = datosArchivos.find(element => { return element.ID_DOC == iddoc });
+                enviar = new document(archivoHOE.ID_DOC,archivoHOE.Nombre,archivoHOE.Extension,docpre.path,docpre.isDirectory, archivoHOE.HOE_Code,archivoHOE.Document_Type_Hoe,"calidad","press",archivoHOE.No_Rev,"Ingles","2022-05-05",2,archivoHOE.Fecha_Modificacion,archivoHOE.ID_Revisor1,archivoHOE.ID_Revisor2,archivoHOE.ID_Revisor3,archivoHOE.ID_UserModifico,archivoHOE.Estatus);
+                
+            }
+        }
+
+        if(band){
+            res.json({
+                success: true,
+                response:enviar,
+                message: `se encotro el documento con id = ${iddoc}`
+            })
+        }else{
+            res.json({
+                success: false,
+                message: `no se encotro el documento con id = ${iddoc}`
+            })
+        }
+    },
+
     postrute: async (req,res)=>{
         
         var arr= [];
@@ -280,7 +375,6 @@ const general={
     },
 
     postdelate:async (req,res)=>{
-
         var name = req.body.name;
         var ext = req.body.ext;
         var rut = req.body.rut;
@@ -518,7 +612,7 @@ const general={
     gettask:async (req,res)=>{
         try{
             const aux = await new sql.Request();
-            const resu = await aux.query(`select * from Tareas where ID_Doc=${req.body.id}`)
+            const resu = await aux.query(`select * from TaskDocs where ID_Doc=${req.body.id}`)
             
             if(!resu){
                 return res.json({
@@ -544,9 +638,38 @@ const general={
             })
         }
     },
+    gettasksorder:async (req,res)=>{
+        try{
+            const aux = await new sql.Request();
+            const resu = await aux.query(`select * from TaskDocs where ID_User_Asignado=${req.body.iduser} and Estatus=${req.body.esta} and (Nombre like '%${req.body.insearch}%' or Descripcion like '%${req.body.insearch}%') order by ${req.body.colum} ${req.body.order};`)
+            
+            if(!resu){
+                return res.json({
+                    success: false,
+                    operation:resu.recordsets.recordset,
+                    message: "Mo se completo la operacion"
+                })
+            }
+    
+            return res.json({
+                success: true,
+                operation:resu.recordsets[0],
+                message: "Tareas Encontradas!!"
+            })
+    
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`gettasksorder`))
+    
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos `
+            })
+        }
+    },
     updatepropi:async (req,res)=>{
         try{
-
+            console.log(req.body)
             const aux = await new sql.Request();
             const resu = await aux.query(`update Documentos set Nombre='${req.body.name}', ID_Revisor1=${req.body.rev1},ID_Revisor2=${req.body.rev2},ID_Revisor3=${req.body.rev3}, Document_Type_Hoe='${req.body.secu}',No_Rev='${req.body.nore}',HOE_Code='${req.body.hoec}', Fecha_Modificacion=(CURRENT_TIMESTAMP) ,ID_UserModifico='${req.body.idcont}' where ID_DOC=${req.body.id}`)
             
@@ -572,6 +695,8 @@ const general={
             })
         }
     },
+
+    
 
     getencabe:async (req,res)=>{
         try{
@@ -615,7 +740,7 @@ const general={
 
         try{
             const aux = await new sql.Request();
-            const resu = await aux.query(`update encabezados set numerlu=${req.body.nume}, visible=${req.body.visi} where Id=${req.body.id};`)
+            const resu = await aux.query(`update encabezados set numerlu=${req.body.nume}, visible=${req.body.visi} ,nombre='${req.body.name}' where Id=${req.body.id};`)
             
             if(!resu){
                 return res.json({
@@ -690,10 +815,167 @@ const general={
         res.json("simon")
     },
 
-
+    updatetask:async (req,res)=>{
+        console.log(req.body)
+        try{
+            const aux = await new sql.Request();
+            const resu = await aux.query(`update Tareas set Comentarios='${req.body.come}', Estatus=2 where ID_T=${req.body.idt};`)
+            
+            if(!resu){
+                return res.json({
+                    success: false,
+                    message: "Mo se completo la operacion"
+                })
+            }
+    
+            return res.json({
+                success: true,
+                message: `Se moodifico la tarea!!`
+            })
+    
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`updatetask`))
+    
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos `
+            })
+        }
+    },
     
 
+    documentosorderby:async(req,res)=>{
 
+        try{
+        const aux = await new sql.Request();
+        const resu = await aux.query(`select * from Documentos order by ${req.body.colum} ${req.body.order};`)
+            
+        var archivoHOE =resu.recordset;
+
+        var arr= [];
+        const fs2 = require('fs');
+        if(req.body.ruta==''){
+            var urls = `http://localhost:4000/uploads${req.body.ruta}/`;
+        }else{
+            var urls = `http://localhost:4000/uploads/${req.body.ruta}/`;
+        }
+        
+        
+
+        var ls =fs2.readdirSync(`./uploads/${req.body.ruta}`);
+
+        function documentor(id,nam,ext,url,dir,cod,tdo,are,sho,nor,len,fev,ane,mod,rev1,rev2,rev3,modifica,estatus){
+            this.id=id;
+            this.name= nam;
+            this.ext = ext;
+            this.url = url;
+            this.dir = dir;
+            this.cod = cod;
+            this.tdo = tdo;
+            this.are = are;
+            this.sho = sho;
+            this.nor = nor;
+            this.len = len;
+            this.fev = fev;
+            this.ane = ane;
+            this.mod = mod;
+            this.rev1 = rev1;
+            this.rev2 = rev2;
+            this.rev3 = rev3;
+            this.modifica = modifica;
+            this.estatus = estatus;
+        }
+
+        for(var i=0;i<archivoHOE.length;i++){
+            
+            for(var j=0;j<ls.length;j++){
+                const file  = path.join(`./uploads/${req.body.ruta}`,ls[j]);
+                var dataFile =null;
+
+                try{
+                    dataFile =fs2.lstatSync(file);
+                 }catch(e){}
+    
+                 if(dataFile){
+                    var id =Number( ls[j].split('Â§',1));
+                    var name = ls[j].split('Â§').pop()
+                    if(archivoHOE[i].ID_DOC==id){
+                        var ne = new documentor(id,name, ls[j].split(".").pop(),`${urls}${ls[j]}`,dataFile.isDirectory(),archivoHOE[i].HOE_Code,archivoHOE[i].Document_Type_Hoe,"calidad","press",archivoHOE[i].No_Rev,"Ingles","2022-05-05",2,archivoHOE[i].Fecha_Modificacion,archivoHOE[i].ID_Revisor1,archivoHOE[i].ID_Revisor2,archivoHOE[i].ID_Revisor3,archivoHOE[i].ID_UserModifico,archivoHOE[i].Estatus);
+                        arr.push(ne);break;
+                        
+                    }
+                    
+                }
+            }
+        }
+
+        for(var i=0;i<ls.length;i++){
+            const file  = path.join(`./uploads/${req.body.ruta}`,ls[i]);
+            var dataFile =null;
+
+            try{
+                dataFile =fs2.lstatSync(file);
+             }catch(e){}
+
+             if(dataFile.isDirectory()){
+                var ne = new documentor(0,ls[i], ls[i].split(".").pop(),`${urls}${ls[i]}`,dataFile.isDirectory(),"PCQ0110-01","procedure","calidad","press","N","spanish","2022-05-05",2,"november 10,21",0,0,0,0,0);
+                arr.unshift(ne);
+            }
+        }
+
+        return res.json({
+            success: true,
+            operation:arr,
+            message: `Se devolvieron los archivos ordenados por ${req.body.colum} de manerea ${req.body.order}`
+        })
+        
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`documentosorderby`))
+    
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos `
+            })
+        }
+
+    },
+
+    prueba:async(req,res)=>{
+        console.log(req.body)
+        console.log("sdim")
+        res.json('simon')
+        // try{
+        //     const aux = await new sql.Request();
+        //     const resu = await aux.query(`update Tareas set Comentarios='${req.body.come}', Estatus=2 where ID_T=${req.body.idt};`)
+            
+        //     if(!resu){
+        //         return res.json({
+        //             success: false,
+        //             message: "Mo se completo la operacion"
+        //         })
+        //     }
+    
+        //     return res.json({
+        //         success: true,
+        //         message: `Se moodifico la tarea!!`
+        //     })
+    
+        // }catch(e){
+        //     console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`updatetask`))
+    
+        //     return res.json({
+        //     success: false,
+        //     operation:e,
+        //     message: `No se pudo haceer tu consulta fallo la base de datos `
+        //     })
+        // }
+    }
+
+
+
+    
 }
 
 module.exports = general;

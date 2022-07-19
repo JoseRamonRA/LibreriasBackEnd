@@ -16,13 +16,19 @@ const {
     deletetask,
     deletearch,
     gettask,
+    gettasksorder,
     updatepropi,
     getencabe,
     updatencabe,
     getencabeorder,
-    movefiledir
+    movefiledir,
+    postfileid,
+    updatetask,
+    documentosorderby,
+    prueba
     
 } = require('../controllers/general.controllers')
+
 
 router.get('/getfiles',getfiles);
 router.get('/getfiles2',getfiles2);
@@ -43,6 +49,12 @@ router.post('/gettask',gettask)
 router.post('/updatepropi',updatepropi)
 router.post('/updateenca',updatencabe)
 router.post('/move',movefiledir)
+router.post('/gettaskorder',gettasksorder);
+router.post('/postfileid',postfileid);
+router.post('/updatetask',updatetask);
+router.post('/documentosorderby',documentosorderby)
+
+router.post('/prueba',prueba)
 
 router.get('/',hello);
 

@@ -100,7 +100,7 @@ router.get("/listaTareas/:idUser/:estatus", async (req, res) => {
         res.status(400).json({ error });
     }
 });
-router.post("/rechazo/:idUser/:iddoc/:idflujo/:idtarea", async (req, res) => {
+router.post("/rechazo/:idUser/:iddoc/:idflujo/:idtarea/:coment", async (req, res) => {
     try {
 
         let rechazoDoc = await new rechazarDoc(
@@ -110,7 +110,7 @@ router.post("/rechazo/:idUser/:iddoc/:idflujo/:idtarea", async (req, res) => {
             req.params.idflujo,new Date(),req.params.idUser,3,'Cancelado'
         );
         let cancelarTarea = await new aprobacionTarea(
-            req.params.idtarea,new Date(),2,'Cancelado'
+            req.params.idtarea,new Date(),2,`${req.params.coment}`
         );
          res.json({
             mensaje:"Insercion exitosa",
