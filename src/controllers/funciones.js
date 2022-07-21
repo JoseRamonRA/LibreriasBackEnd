@@ -1,4 +1,4 @@
-const sql = require('../Conexion/conexion');
+const sql = require('../Connection/conexion');
 export async function extraerReq(){
     return await new sql.Request()
         .query('SELECT * from [dbo].[Tabla_de_Catalogo_de_Requerimientos_en_Linea]');  

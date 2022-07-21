@@ -1,9 +1,8 @@
 const chalk = require('chalk');
-const res = require('express/lib/response');
+
 const path = require ('path');
 
-import e from 'express';
-import sql from '../Conexion/conexion';
+import sql from '../Connection/conexion';
 
 const { 
     infoDocumentos
@@ -13,6 +12,7 @@ const general={
     hello: async (req,res) =>{
         res.json("hola ")
     }, 
+
     getfiles : async (req,res)=>{
         const fs = require('fs');
         const urls = "http://localhost:4000/uploads/";
@@ -39,7 +39,6 @@ const general={
         res.json(arr)
     })
     },
-
 
     getfiles2 : async (req,res)=>{
         const fs2 = require('fs');
@@ -376,24 +375,9 @@ const general={
 
     postdelate:async (req,res)=>{
         var name = req.body.name;
-        var ext = req.body.ext;
         var rut = req.body.rut;
         var dir = req.body.dir;
 
-        if(rut==""){
-            rut="";
-        }else{
-            rut = rut+"/";
-        }
-        console.log(name,ext,rut,dir)
-
-        if(ext != 'pdf' && ext!='docx' && ext!="doc" && ext!="xlsx" && ext!="xls" && ext!="jpg" && ext!="png"){
-            ext="";
-        }else{
-            ext="."+ext;
-        }
-
-        
         const fs=require("fs");
         const p=require("path");
         let path=p.join(`./uploads/${rut}${name}`);
@@ -404,11 +388,11 @@ const general={
                 deleteFolder(path);
                 var mensaje = "Carpeta Eliminada"
             }else{
-                fs.unlinkSync(`./uploads/${rut}${name}${ext}`);
+                fs.unlinkSync(`./uploads/${req.body.name}`);
                 var mensaje = "Archivo Eliminado"
             }
         }catch(e){
-
+            res.json("error")
         }
         
         function deleteFolder(path) {
@@ -504,7 +488,7 @@ const general={
             })
     
         }catch(e){
-            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`deleterecycle`))
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`deleteflujo`))
     
             return res.json({
             success: false,
@@ -534,7 +518,7 @@ const general={
             })
     
             }catch(e){
-                console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`deleterecycle`))
+                console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`deletetask`))
     
                 return res.json({
                 success: false,
@@ -547,7 +531,7 @@ const general={
     restaurararch:async (req,res)=>{
         try{
             const aux = await new sql.Request();
-            const resu = await aux.query(`update Documentos set Estatus=3 where ID_DOC=${req.body.id}`)
+            const resu = await aux.query(`update Documentos set Estatus=2 where ID_DOC=${req.body.id}`)
             
             if(!resu){
                 return res.json({
@@ -564,7 +548,7 @@ const general={
             })
     
             }catch(e){
-                console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`deleterecycle`))
+                console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`restaurararch`))
     
                 return res.json({
                 success: false,
@@ -598,7 +582,7 @@ const general={
         })
 
         }catch(e){
-            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`deleterecycle`))
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`deletearch`))
     
                 return res.json({
                 success: false,
@@ -609,6 +593,7 @@ const general={
 
 
     },
+
     gettask:async (req,res)=>{
         try{
             const aux = await new sql.Request();
@@ -624,7 +609,7 @@ const general={
     
             return res.json({
                 success: true,
-                operation:resu.recordsets[0],
+                operation:resu.recordset[0],
                 message: "Tarea Encontrada!!"
             })
     
@@ -638,6 +623,7 @@ const general={
             })
         }
     },
+
     gettasksorder:async (req,res)=>{
         try{
             const aux = await new sql.Request();
@@ -667,6 +653,7 @@ const general={
             })
         }
     },
+
     updatepropi:async (req,res)=>{
         try{
             console.log(req.body)
@@ -695,8 +682,6 @@ const general={
             })
         }
     },
-
-    
 
     getencabe:async (req,res)=>{
         try{
@@ -751,7 +736,7 @@ const general={
     
             return res.json({
                 success: true,
-                message: `Propiedades actualizadas ID_doc=${req.body.id}!!`
+                message: `Nuevos cambios en encabezados!!`
             })
     
         }catch(e){
@@ -815,41 +800,40 @@ const general={
         res.json("simon")
     },
 
-    updatetask:async (req,res)=>{
-        console.log(req.body)
-        try{
-            const aux = await new sql.Request();
-            const resu = await aux.query(`update Tareas set Comentarios='${req.body.come}', Estatus=2 where ID_T=${req.body.idt};`)
+    // updatetask:async (req,res)=>{
+    //     console.log(req.body)
+    //     try{
+    //         const aux = await new sql.Request();
+    //         const resu = await aux.query(`update Tareas set Comentarios='${req.body.come}', Estatus=2 where ID_T=${req.body.idt};`)
             
-            if(!resu){
-                return res.json({
-                    success: false,
-                    message: "Mo se completo la operacion"
-                })
-            }
+    //         if(!resu){
+    //             return res.json({
+    //                 success: false,
+    //                 message: "Mo se completo la operacion"
+    //             })
+    //         }
     
-            return res.json({
-                success: true,
-                message: `Se moodifico la tarea!!`
-            })
+    //         return res.json({
+    //             success: true,
+    //             message: `Se moodifico la tarea!!`
+    //         })
     
-        }catch(e){
-            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`updatetask`))
+    //     }catch(e){
+    //         console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`updatetask`))
     
-            return res.json({
-            success: false,
-            operation:e,
-            message: `No se pudo haceer tu consulta fallo la base de datos `
-            })
-        }
-    },
+    //         return res.json({
+    //         success: false,
+    //         operation:e,
+    //         message: `No se pudo haceer tu consulta fallo la base de datos `
+    //         })
+    //     }
+    // },
     
-
     documentosorderby:async(req,res)=>{
 
         try{
         const aux = await new sql.Request();
-        const resu = await aux.query(`select * from Documentos order by ${req.body.colum} ${req.body.order};`)
+        const resu = await aux.query(`select * from Documentos Where Estatus!=4 order by ${req.body.colum} ${req.body.order};`)
             
         var archivoHOE =resu.recordset;
 
@@ -942,40 +926,201 @@ const general={
 
     },
 
-    prueba:async(req,res)=>{
-        console.log(req.body)
-        console.log("sdim")
-        res.json('simon')
-        // try{
-        //     const aux = await new sql.Request();
-        //     const resu = await aux.query(`update Tareas set Comentarios='${req.body.come}', Estatus=2 where ID_T=${req.body.idt};`)
+    setdocbinary:async(req,res)=>{
+        
+        const fs = require('fs')
+        try{
+
+        const data = fs.readFileSync(`./uploads/${req.body.urlfind}`,{encoding:'base64', flag:'r'});
+        fs.writeFile("src/EncodeFiles/base64.txt", data, function(err) {
+            if(err) {
+                return console.error(err);
+            }
+            console.log("File saved successfully!");
+        });
+
+        const aux = await new sql.Request();
+        const resu = await aux.query(`update Documentos set Doc_Binario=CAST(N'${data.toString()}' AS varbinary(max)) where ID_DOC=${req.body.idoc};`)
             
-        //     if(!resu){
-        //         return res.json({
-        //             success: false,
-        //             message: "Mo se completo la operacion"
-        //         })
-        //     }
+            if(!resu){
+                return res.json({
+                    success: false,
+                    message: "Mo se completo la operacion insersion binaria"
+                })
+            }
     
-        //     return res.json({
-        //         success: true,
-        //         message: `Se moodifico la tarea!!`
-        //     })
+            return res.json({
+                success: true,
+                message: `Se inserto el documento binario!!`
+            })
     
-        // }catch(e){
-        //     console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`updatetask`))
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`setdocbinary`))
     
-        //     return res.json({
-        //     success: false,
-        //     operation:e,
-        //     message: `No se pudo haceer tu consulta fallo la base de datos `
-        //     })
-        // }
-    }
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos `
+            })
+        }
+    },
+
+    rejectdoc:async (req,res)=>{
+        
+        try{
+        const aux = await new sql.Request();
+        const resu = await aux.query(`UPDATE Documentos SET Estatus =${req.body.esta},ID_UserModifico = ${req.body.iduser}, Fecha_Modificacion =CURRENT_TIMESTAMP WHERE ID_DOC = ${req.body.idoc}`)
+        
+        if(!resu){
+            return res.json({
+                success: false,
+                operation:resu.rowsAffected,
+                message: "Mo se completo la operacion"
+            })
+        }
+
+        return res.json({
+            success: true,
+            operation:resu.rowsAffected,
+            message: "Documento en estatus eliminado!!"
+        })
+
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`rejectdoc`))
+
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos para la operacion ==> rejectdoc  `
+            })
+        }
 
 
+    },
 
+    rejectflujo:async (req,res)=>{
+        try{
+            console.log(req.body.iduser,req.body.esta,req.body.coment,req.body.idflu)
+            const aux = await new sql.Request();
+            const resu = await aux.query(`UPDATE Flujo_Trabajo SET Fecha_Cancelacion = CURRENT_TIMESTAMP, ID_User_Cancelo = ${req.body.iduser}, Estatus = ${req.body.esta}, Comentarios = '${req.body.coment}' WHERE ID_F = ${req.body.idflu}`)
+            
+            if(!resu){
+                return res.json({
+                    success: false,
+                    operation:resu.rowsAffected,
+                    message: "Mo se completo la operacion"
+                })
+            }
     
+            return res.json({
+                success: true,
+                operation:resu.rowsAffected,
+                message: "Flujo en estatus eliminado!!"
+            })
+    
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`rejectflujo`))
+    
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos para la operacion ==> rejectflujo `
+            })
+        }
+    },
+
+    rejecttask: async (req,res)=>{
+        try{
+            const aux = await new sql.Request();
+            const resu = await aux.query(`UPDATE Tareas SET Fecha_Fin = CURRENT_TIMESTAMP, Estatus = ${req.body.esta}, Comentarios = '${req.body.coment}' WHERE ID_T = ${req.body.idflu}`)
+            
+            if(!resu){
+                return res.json({
+                    success: false,
+                    operation:resu.rowsAffected,
+                    message: "Mo se completo la operacion"
+                })
+            }
+    
+            return res.json({
+                success: true,
+                operation:resu.rowsAffected,
+                message: "Tarea en estatus Eliminado!!"
+            })
+    
+            }catch(e){
+                console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`rejecttask`))
+    
+                return res.json({
+                success: false,
+                operation:e,
+                message: `No se pudo haceer tu consulta fallo la base de datos para la operacion ==> rejecttask`
+                })
+            }
+    },
+
+    restoreflujo:async (req,res)=>{
+        try{
+            console.log(req.body.iduser,req.body.esta,req.body.coment,req.body.idflu)
+            const aux = await new sql.Request();
+            const resu = await aux.query(`update Flujo_Trabajo set Fecha_Inicio = CURRENT_TIMESTAMP, Estatus=${req.body.esta}, Fecha_Cancelacion=NULL, Comentarios= '${req.body.coment}' where ID_F=${req.body.idflu}`)
+            
+            if(!resu){
+                return res.json({
+                    success: false,
+                    operation:resu.rowsAffected,
+                    message: "Mo se completo la operacion"
+                })
+            }
+    
+            return res.json({
+                success: true,
+                operation:resu.rowsAffected,
+                message: "Flujo Restaurado!!"
+            })
+    
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`restoreflujo`))
+    
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos para la operacion ==> rejectflujo `
+            })
+        }
+    },
+
+    restoretask: async (req,res)=>{
+        try{
+            const aux = await new sql.Request();
+            const resu = await aux.query(`update Tareas set Estatus=${req.body.esta}, Comentarios='${req.body.coment}', Fecha_Inicio= CURRENT_TIMESTAMP, Fecha_Fin=NULL where ID_Flujo=${req.body.idflu};`)
+            
+            if(!resu){
+                return res.json({
+                    success: false,
+                    operation:resu.rowsAffected,
+                    message: "Mo se completo la operacion"
+                })
+            }
+    
+            return res.json({
+                success: true,
+                operation:resu.rowsAffected,
+                message: "Tarea Restaurada!!"
+            })
+    
+            }catch(e){
+                console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`restoretask`))
+    
+                return res.json({
+                success: false,
+                operation:e,
+                message: `No se pudo haceer tu consulta fallo la base de datos para la operacion ==> rejecttask`
+                })
+            }
+    },
+
+
 }
 
 module.exports = general;

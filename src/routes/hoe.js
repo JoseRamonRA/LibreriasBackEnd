@@ -18,14 +18,14 @@ const {
 } = require('../controllers/funciones');
 const storage = multer.diskStorage({
     filename: function (res, file, cb) {
-     console.log(file);
+     
       const arreglo = file.originalname.split("§");
       cb(null, `${arreglo[0]}§${arreglo[1]}`); 
     },
     destination: function (res, file, cb) {
-    console.log(file);
+    
     const arreglo = file.originalname.split("§");
-    console.log(arreglo);
+    
     if(arreglo.length == 3){
         cb(null, `./uploads${arreglo[2]}`);
     }else{

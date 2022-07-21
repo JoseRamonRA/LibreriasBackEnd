@@ -25,7 +25,12 @@ const {
     postfileid,
     updatetask,
     documentosorderby,
-    prueba
+    setdocbinary,
+    rejectdoc,
+    rejectflujo,
+    rejecttask,
+    restoreflujo,
+    restoretask
     
 } = require('../controllers/general.controllers')
 
@@ -51,10 +56,16 @@ router.post('/updateenca',updatencabe)
 router.post('/move',movefiledir)
 router.post('/gettaskorder',gettasksorder);
 router.post('/postfileid',postfileid);
-router.post('/updatetask',updatetask);
+// router.post('/updatetask',updatetask);
 router.post('/documentosorderby',documentosorderby)
+router.post('/setdocbinary',setdocbinary)
 
-router.post('/prueba',prueba)
+router.post('/rejectdoc',rejectdoc)
+router.post('/rejectflujo',rejectflujo)
+router.post('/rejecttask',rejecttask)
+
+router.post('/restoreflujo',restoreflujo)
+router.post('/restoretask',restoretask)
 
 router.get('/',hello);
 
