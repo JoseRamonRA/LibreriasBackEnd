@@ -23,15 +23,7 @@ const storage = multer.diskStorage({
       cb(null, `${arreglo[0]}§${arreglo[1]}`); 
     },
     destination: function (res, file, cb) {
-    
-    const arreglo = file.originalname.split("§");
-    
-    if(arreglo.length == 3){
-        cb(null, `./uploads${arreglo[2]}`);
-    }else{
-        cb(null, `./uploads`);
-    }
-      
+    cb(null, `./uploads`); 
     },
   });
   
@@ -39,7 +31,6 @@ const subir = multer({ storage });
 
 router.post("/subirDocumento",subir.single("archivoHOE"), async (req, res) => {
     try {
-   
          res.json({
             mensaje:"Se subio el archivo"
         })

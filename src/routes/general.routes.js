@@ -30,7 +30,8 @@ const {
     rejectflujo,
     rejecttask,
     restoreflujo,
-    restoretask
+    restoretask,
+    renamedoc
     
 } = require('../controllers/general.controllers')
 
@@ -51,6 +52,7 @@ router.post('/deleteflujo',deleteflujo)
 router.post('/deletetask',deletetask)
 router.post('/deletearch',deletearch)
 router.post('/gettask',gettask)
+router.post('/renamedoc',renamedoc)
 router.post('/updatepropi',updatepropi)
 router.post('/updateenca',updatencabe)
 router.post('/move',movefiledir)

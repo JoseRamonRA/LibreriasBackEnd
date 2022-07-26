@@ -362,13 +362,19 @@ const general={
         }else{
             ext="."+ext;
         }
-
         const fs = require('fs');
-        console.log(rut,old,name,ext);
-        fs.rename(`./uploads/${rut}${id+'Â§'+old}${ext}`, `./uploads/${rut}${id+'Â§'+name}${ext}`, (err) => {
-            if (err) throw err;
-            console.log('renamed complete');
-        });
+
+        if(ext==""){
+            fs.rename(`./uploads/${rut}${old}${ext}`, `./uploads/${rut}${name}${ext}`, (err) => {
+                if (err) throw err;
+                console.log('renamed complete');
+            });
+        }else{
+            fs.rename(`./uploads/${rut}${id+'Â§'+old}${ext}`, `./uploads/${rut}${id+'Â§'+name}${ext}`, (err) => {
+                if (err) throw err;
+                console.log('renamed complete');
+            });
+        }
 
         res.json("renamed")
     },
@@ -788,7 +794,11 @@ const general={
         const src = `./uploads/${req.body.move}`;
         
         // Destination path
-        const dest = `./uploads/${req.body.desti}/${req.body.nameid}`;
+        if(req.body.desti==""){
+            var dest = `./uploads/${req.body.nameid}`;
+        }else{
+            var dest = `./uploads/${req.body.desti}/${req.body.nameid}`;
+        }
         
         // Function call
         // Using call back function
@@ -800,6 +810,35 @@ const general={
         res.json("simon")
     },
 
+    renamedoc:async(req,res)=>{
+        try{
+            const aux = await new sql.Request();
+            const resu = await aux.query(`UPDATE Documentos SET Nombre='${req.body.namenew}.${req.body.ext}' WHERE ID_DOC=${req.body.id}`)
+            
+            if(!resu){
+                return res.json({
+                    success: false,
+                    operation:resu.rowsAffected,
+                    message: "Mo se completo la operacion"
+                })
+            }
+    
+            return res.json({
+                success: true,
+                operation:resu.rowsAffected,
+                message: "Nombre Actualizado en BD!!"
+            })
+    
+        }catch(e){
+                console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`renamedoc`))
+    
+                return res.json({
+                success: false,
+                operation:e,
+                message: `No se pudo haceer tu consulta fallo la base de datos para la operacion ==> renamedoc`
+                })
+        }
+    },
     // updatetask:async (req,res)=>{
     //     console.log(req.body)
     //     try{
@@ -1109,7 +1148,7 @@ const general={
                 message: "Tarea Restaurada!!"
             })
     
-            }catch(e){
+        }catch(e){
                 console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`restoretask`))
     
                 return res.json({
@@ -1117,7 +1156,7 @@ const general={
                 operation:e,
                 message: `No se pudo haceer tu consulta fallo la base de datos para la operacion ==> rejecttask`
                 })
-            }
+        }
     },
 
 
