@@ -339,11 +339,26 @@ const general={
     },
     
     newroute:async (req,res)=>{
-        var rutas = req.body.ruta;
-        const fs = require('fs');
-        console.log(rutas)
-        fs.mkdirSync(`./uploads/${rutas}`,{recursive:true});
-        res.json("ruta creada");
+        try{
+            var rutas = req.body.ruta;
+            const fs = require('fs');
+            console.log(rutas)
+            fs.mkdirSync(`./uploads/${rutas}`,{recursive:true});
+            
+            var nombre = rutas.split('/').pop()
+
+            return res.json({
+                success: true,
+                message: `se ha creado un nuevo directorio ${nombre}!!`
+            })
+
+        }catch(e){
+            return res.json({
+                success: false,
+                operation: e.message,
+                message: "no se ha creado el directorio"
+            })
+        }
     },
 
     postrename:async (req,res)=>{
@@ -423,15 +438,98 @@ const general={
     searchsimple:async (req,res)=>{
         const aux = await new sql.Request(); 
 
+        console.log(req.body)
         if(req.body.ext=="AllResults" && req.body.fecha=="AllResults"){
-            const resu = await aux.query(`select * from Documentos where Nombre like '%${req.body.text}%' and ID_Contribuidor=${req.body.id};`)
-            res.json(resu.recordset)
+            var resu = await aux.query(`select * from Documentos where Nombre like '%${req.body.text}%'`)
         }else{
             if(req.body.ext!="Allresults"){
-                const resu = await aux.query(`select * from Documentos where Nombre like '%${req.body.text}%' and ID_Contribuidor=${req.body.id} and Extension='${req.body.ext}'`)
-                res.json(resu.recordset)
+                var resu = await aux.query(`select * from Documentos where Nombre like '%${req.body.text}%' and Extension='${req.body.ext}'`)
             }
         }
+        
+        var archivoHOE= resu.recordset;
+
+        const path = require('path');
+        const fs = require('fs');
+
+        var data=[];
+        var arr=[];
+
+        function scanDirs(directoryPath){
+        try{
+            var ls=fs.readdirSync(directoryPath);
+
+            for (let index = 0; index < ls.length; index++) {
+                const file = path.join(directoryPath, ls[index]);
+                var dataFile =null;
+                try{
+                    dataFile =fs.lstatSync(file);
+                }catch(e){}
+
+                if(dataFile){
+                    data.push(
+                    {
+                        path: `http://localhost:4000\\${file}`,
+                        isDirectory: dataFile.isDirectory(),
+                    });
+
+                    if(dataFile.isDirectory()){
+                    scanDirs(file)
+                    }
+                }
+            }
+        }catch(e){}
+        }
+        function document(id,nam,ext,url,dir,cod,tdo,are,sho,nor,len,fev,ane,mod,rev1,rev2,rev3,modifica,estatus){
+            this.ID_DOC=id;
+            this.Nombre= nam;
+            this.Extension = ext;
+            this.url = url;
+            this.dir = dir;
+            this.HOE_Code = cod;
+            this.Document_Type_Hoe = tdo;
+            this.are = are;
+            this.sho = sho;
+            this.No_Rev = nor;
+            this.len = len;
+            this.Fecha_Vencimiento = fev;
+            this.ane = ane;
+            this.Fecha_Modificacion = mod;
+            this.ID_Revisor1 = rev1;
+            this.ID_Revisor2 = rev2;
+            this.ID_Revisor3 = rev3;
+            this.ID_UserModifico = modifica;
+            this.Estatus = estatus;
+        }
+
+        scanDirs('./uploads');
+
+        for(var i=0;i<archivoHOE.length;i++){
+
+            for(var j=0;j<data.length;j++){
+                var otro =data[j].path.split('\\').pop()
+                var comp = Number(otro.split('Â§',1))
+                var ruta = data[j].path.split('\\')
+                ruta = ruta.join('/')
+                if(archivoHOE[i].ID_DOC== comp){
+                    var ne = new document(archivoHOE[i].ID_DOC,archivoHOE[i].Nombre, archivoHOE[i].Extension,ruta,data[j].isDirectory,archivoHOE[i].HOE_Code,archivoHOE[i].Document_Type_Hoe,"calidad","press",archivoHOE[i].No_Rev,"Ingles","2022-05-05",2,archivoHOE[i].Fecha_Modificacion,archivoHOE[i].ID_Revisor1,archivoHOE[i].ID_Revisor2,archivoHOE[i].ID_Revisor3,archivoHOE[i].ID_UserModifico,archivoHOE[i].Estatus);
+                    arr.push(ne);break;
+                }
+            }
+        }
+        // if(band){
+        //     res.json({
+        //         success: true,
+        //         response:enviar,
+        //         message: `se encotro el documento con id = ${iddoc}`
+        //     })
+        // }else{
+        //     res.json({
+        //         success: false,
+        //         message: `no se encotro el documento con id = ${iddoc}`
+        //     })
+        // }
+        res.json(arr)
       
     },
     
@@ -719,15 +817,13 @@ const general={
     },
 
     updatencabe:async (req,res)=>{
-        console.log(req.body)
-
+        
         if(req.body.visi==true){
             req.body.visi=1;
         }else{
             req.body.visi=0;
         }
 
-        console.log(req.body.visi);
 
         try{
             const aux = await new sql.Request();
@@ -803,11 +899,20 @@ const general={
         // Function call
         // Using call back function
         fs.move(src, dest, (err) => {
-        if (err) return console.log(err);
+        if (err){
+            return res.json({
+                success: false,
+                message: `${err}`
+            })
+        };
         console.log(`File successfully moved!!`);
+        return res.json({
+            success: true,
+            message: `${req.body.move.split('/').pop()} se ha cambiado de directorio a ${req.body.desti.split("/").pop()}`
+        })
         });
 
-        res.json("simon")
+        
     },
 
     renamedoc:async(req,res)=>{
