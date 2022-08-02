@@ -977,7 +977,14 @@ const general={
 
         try{
         const aux = await new sql.Request();
-        const resu = await aux.query(`select * from Documentos Where Estatus!=4 order by ${req.body.colum} ${req.body.order};`)
+        switch(req.body.role){
+            case 'admin':var resu = await aux.query(`select * from Documentos Where Estatus!=4 order by ${req.body.colum} ${req.body.order};`);break;
+            case 'revisor':var resu = await aux.query(`select * from Documentos where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser}) order by ${req.body.colum} ${req.body.order};`);break;
+            case 'contribuidor':var resu = await aux.query(`select * from Documentos where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser}) order by ${req.body.colum} ${req.body.order};`);break;
+            case 'visitante':var resu = await aux.query(`select * from Documentos Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
+            default:var resu = await aux.query(`select * from Documentos Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
+        }
+        
             
         var archivoHOE =resu.recordset;
 
@@ -1070,6 +1077,224 @@ const general={
 
     },
 
+    documentsalone:async(req,res)=>{
+        try{
+            const aux = await new sql.Request();
+            switch(req.body.role){
+                case 'admin':var resu = await aux.query(`select * from DocsComplete Where Estatus!=4 order by ${req.body.colum} ${req.body.order};`);break;
+                case 'revisor':var resu = await aux.query(`select * from DocsComplete where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser}) order by ${req.body.colum} ${req.body.order};`);break;
+                case 'contribuidor':var resu = await aux.query(`select * from DocsComplete where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser}) order by ${req.body.colum} ${req.body.order};`);break;
+                case 'visitante':var resu = await aux.query(`select * from DocsComplete Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
+                default:var resu = await aux.query(`select * from DocsComplete Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
+            }
+            
+        var archivoHOE= resu.recordset;
+
+        const path = require('path');
+        const fs = require('fs');
+
+        var data=[];
+        var arr=[];
+
+        function scanDirs(directoryPath){
+        try{
+            var ls=fs.readdirSync(directoryPath);
+
+            for (let index = 0; index < ls.length; index++) {
+                const file = path.join(directoryPath, ls[index]);
+                var dataFile =null;
+                try{
+                    dataFile =fs.lstatSync(file);
+                }catch(e){}
+
+                if(dataFile){
+                    data.push(
+                    {
+                        path: `http://localhost:4000\\${file}`,
+                        isDirectory: dataFile.isDirectory(),
+                    });
+
+                    if(dataFile.isDirectory()){
+                    scanDirs(file)
+                    }
+                }
+            }
+        }catch(e){}
+        }
+        function document(id,contribuidor,nam,ext,url,dir,cod,tdo,are,sho,nor,len,fev,ane,mod,rev1,rev2,rev3,modifica,estatus,ID_User_Asignado){
+            this.ID_DOC=id;
+            this.ID_Contribuidor = contribuidor;
+            this.Nombre= nam;
+            this.Extension = ext;
+            this.url = url;
+            this.dir = dir;
+            this.HOE_Code = cod;
+            this.Document_Type_Hoe = tdo;
+            this.are = are;
+            this.sho = sho;
+            this.No_Rev = nor;
+            this.len = len;
+            this.Fecha_Vencimiento = fev;
+            this.ane = ane;
+            this.Fecha_Modificacion = mod;
+            this.ID_Revisor1 = rev1;
+            this.ID_Revisor2 = rev2;
+            this.ID_Revisor3 = rev3;
+            this.ID_UserModifico = modifica;
+            this.Estatus = estatus;
+            this.ID_User_Asignado = ID_User_Asignado;
+        }
+
+        scanDirs('./uploads');
+
+        for(var i=0;i<archivoHOE.length;i++){
+
+            for(var j=0;j<data.length;j++){
+                var otro =data[j].path.split('\\').pop()
+                var comp = Number(otro.split('Â§',1))
+                var ruta = data[j].path.split('\\')
+                ruta = ruta.join('/')
+                if(archivoHOE[i].ID_DOC== comp){
+                    var ne = new document(archivoHOE[i].ID_DOC,archivoHOE[i].ID_Contribuidor,archivoHOE[i].Nombre, archivoHOE[i].Extension,ruta,data[j].isDirectory,archivoHOE[i].HOE_Code,archivoHOE[i].Document_Type_Hoe,"calidad","press",archivoHOE[i].No_Rev,"Ingles","2022-05-05",2,archivoHOE[i].Fecha_Modificacion,archivoHOE[i].ID_Revisor1,archivoHOE[i].ID_Revisor2,archivoHOE[i].ID_Revisor3,archivoHOE[i].ID_UserModifico,archivoHOE[i].Estatus,archivoHOE[i].ID_User_Asignado);
+                    arr.push(ne);break;
+                }
+            }
+        }
+        // if(band){
+        //     res.json({
+        //         success: true,
+        //         response:enviar,
+        //         message: `se encotro el documento con id = ${iddoc}`
+        //     })
+        // }else{
+        //     res.json({
+        //         success: false,
+        //         message: `no se encotro el documento con id = ${iddoc}`
+        //     })
+        // }
+        
+    
+    
+        return res.json({
+            success: true,
+            operation:arr,
+            message: `Se devolvieron los archivos ordenados por ${req.body.colum} de manerea ${req.body.order}`
+        })
+            
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`documentosalone`))
+        
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos `
+            })
+        }
+
+    },
+    documentosorderby:async(req,res)=>{
+
+        try{
+        const aux = await new sql.Request();
+        switch(req.body.role){
+            case 'admin':var resu = await aux.query(`select * from Documentos Where Estatus!=4 order by ${req.body.colum} ${req.body.order};`);break;
+            case 'revisor':var resu = await aux.query(`select * from Documentos where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser}) order by ${req.body.colum} ${req.body.order};`);break;
+            case 'contribuidor':var resu = await aux.query(`select * from Documentos where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser}) order by ${req.body.colum} ${req.body.order};`);break;
+            case 'visitante':var resu = await aux.query(`select * from Documentos Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
+            default:var resu = await aux.query(`select * from Documentos Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
+        }
+        
+            
+        var archivoHOE =resu.recordset;
+
+        var arr= [];
+        const fs2 = require('fs');
+        if(req.body.ruta==''){
+            var urls = `http://localhost:4000/uploads${req.body.ruta}/`;
+        }else{
+            var urls = `http://localhost:4000/uploads/${req.body.ruta}/`;
+        }
+        
+        
+
+        var ls =fs2.readdirSync(`./uploads/${req.body.ruta}`);
+
+        function documentor(id,nam,ext,url,dir,cod,tdo,are,sho,nor,len,fev,ane,mod,rev1,rev2,rev3,modifica,estatus){
+            this.id=id;
+            this.name= nam;
+            this.ext = ext;
+            this.url = url;
+            this.dir = dir;
+            this.cod = cod;
+            this.tdo = tdo;
+            this.are = are;
+            this.sho = sho;
+            this.nor = nor;
+            this.len = len;
+            this.fev = fev;
+            this.ane = ane;
+            this.mod = mod;
+            this.rev1 = rev1;
+            this.rev2 = rev2;
+            this.rev3 = rev3;
+            this.modifica = modifica;
+            this.estatus = estatus;
+        }
+
+        for(var i=0;i<archivoHOE.length;i++){
+            
+            for(var j=0;j<ls.length;j++){
+                const file  = path.join(`./uploads/${req.body.ruta}`,ls[j]);
+                var dataFile =null;
+
+                try{
+                    dataFile =fs2.lstatSync(file);
+                 }catch(e){}
+    
+                 if(dataFile){
+                    var id =Number( ls[j].split('Â§',1));
+                    var name = ls[j].split('Â§').pop()
+                    if(archivoHOE[i].ID_DOC==id){
+                        var ne = new documentor(id,name, ls[j].split(".").pop(),`${urls}${ls[j]}`,dataFile.isDirectory(),archivoHOE[i].HOE_Code,archivoHOE[i].Document_Type_Hoe,"calidad","press",archivoHOE[i].No_Rev,"Ingles","2022-05-05",2,archivoHOE[i].Fecha_Modificacion,archivoHOE[i].ID_Revisor1,archivoHOE[i].ID_Revisor2,archivoHOE[i].ID_Revisor3,archivoHOE[i].ID_UserModifico,archivoHOE[i].Estatus);
+                        arr.push(ne);break;
+                        
+                    }
+                    
+                }
+            }
+        }
+
+        for(var i=0;i<ls.length;i++){
+            const file  = path.join(`./uploads/${req.body.ruta}`,ls[i]);
+            var dataFile =null;
+
+            try{
+                dataFile =fs2.lstatSync(file);
+             }catch(e){}
+
+             if(dataFile.isDirectory()){
+                var ne = new documentor(0,ls[i], ls[i].split(".").pop(),`${urls}${ls[i]}`,dataFile.isDirectory(),"PCQ0110-01","procedure","calidad","press","N","spanish","2022-05-05",2,"november 10,21",0,0,0,0,0);
+                arr.unshift(ne);
+            }
+        }
+
+        return res.json({
+            success: true,
+            operation:arr,
+            message: `Se devolvieron los archivos ordenados por ${req.body.colum} de manerea ${req.body.order}`
+        })
+        
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`documentosorderby`))
+    
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos `
+            })
+        }
+
+    },
     setdocbinary:async(req,res)=>{
         
         const fs = require('fs')

@@ -31,7 +31,8 @@ const {
     rejecttask,
     restoreflujo,
     restoretask,
-    renamedoc
+    renamedoc,
+    documentsalone
     
 } = require('../controllers/general.controllers')
 
@@ -68,6 +69,8 @@ router.post('/rejecttask',rejecttask)
 
 router.post('/restoreflujo',restoreflujo)
 router.post('/restoretask',restoretask)
+
+router.post('/documentsalone',documentsalone)
 
 router.get('/',hello);
 
