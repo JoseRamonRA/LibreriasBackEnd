@@ -1763,7 +1763,7 @@ const general={
 
     reportsgrafics: async (req,res)=>{
 
-        // try{
+        try{
             const fs = require('fs');
             const urls = `http://localhost:4000/uploads/`;
 
@@ -1854,22 +1854,22 @@ const general={
                 }
             }
      
-            // return res.json({
-            //     success: true,
-            //     operation:arr,
-            //     message: `Se devolvieron los archivos ordenados por ${req.body.colum} de manerea ${req.body.order}`
-            // })
+            return res.json({
+                success: true,
+                operation:arr,
+                message: `Se devolvieron los archivos ordenados por ${req.body.colum} de manerea ${req.body.order}`
+            })
             
-            // }catch(e){
-            //     console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`documentosorderby`))
-            //     console.log(e);
+            }catch(e){
+                console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`documentosorderby`))
+                console.log(e);
         
-            //     return res.json({
-            //     success: false,
-            //     operation:e,
-            //     message: `No se pudo haceer tu consulta fallo la base de datos `
-            //     })
-            // }
+                return res.json({
+                success: false,
+                operation:e,
+                message: `No se pudo haceer tu consulta fallo la base de datos `
+                })
+            }
 
 
         
