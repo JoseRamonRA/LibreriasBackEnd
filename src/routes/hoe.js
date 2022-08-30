@@ -47,7 +47,7 @@ router.post("/carga/:idUser", async (req, res) => {
              1,new Date(),1,2,req.body.idcarpeta,
              req.body.doctyhoe,req.body.reviehoe1,
              req.body.reviehoe2,req.body.reviehoe3,req.body.codehoe,req.params.idUser,
-             new Date()
+             new Date(),req.body.Version_Anterior
          );
         
          let flujo = await new crearFlujo(

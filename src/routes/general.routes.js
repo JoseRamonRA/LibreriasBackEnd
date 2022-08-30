@@ -28,11 +28,20 @@ const {
     setdocbinary,
     rejectdoc,
     rejectflujo,
+    getflujoid,
     rejecttask,
     restoreflujo,
     restoretask,
     renamedoc,
-    documentsalone
+    documentsalone,
+    createcarpet,
+    relationfolder,
+    getrelationfolder,
+    updatedocscar,
+    searchcarpet,
+    deletegroupsf,
+    deletegroupsimple,
+    renamecarpetdb
     
 } = require('../controllers/general.controllers')
 
@@ -65,12 +74,23 @@ router.post('/setdocbinary',setdocbinary)
 
 router.post('/rejectdoc',rejectdoc)
 router.post('/rejectflujo',rejectflujo)
+router.post('/getflujoid',getflujoid)
 router.post('/rejecttask',rejecttask)
 
 router.post('/restoreflujo',restoreflujo)
 router.post('/restoretask',restoretask)
 
 router.post('/documentsalone',documentsalone)
+
+router.post('/createcarpet',createcarpet)
+router.post('/relationfolder',relationfolder)
+router.post('/getrelationfolder',getrelationfolder)
+router.post('/deletegroupsimple',deletegroupsimple)
+router.post('/deletegroupsf',deletegroupsf)
+router.post('/updatedocscar',updatedocscar)
+router.post('/searchcarpet',searchcarpet)
+router.post('/renamecarpetdb',renamecarpetdb)
+
 
 router.get('/',hello);
 
