@@ -12,7 +12,7 @@ export async function crearCarpeta(Nombre, idsuperior){
     
 }
 
-export async function crearDocumento(IdContirbuidor,Nombre,Extension,NoRev,DocActual,FechaCarga,Estatus_Seguimiento,Estatus,idCarpeta,DocumentTypeHoe,Revisor1,Revisor2,Revisor3,HoeCode,idModifica,fechaModifica){
+export async function crearDocumento(IdContirbuidor,Nombre,Extension,NoRev,DocActual,FechaCarga,Estatus_Seguimiento,Estatus,idCarpeta,DocumentTypeHoe,Revisor1,Revisor2,Revisor3,HoeCode,idModifica,fechaModifica,Version_Anterior){
      return await new sql.Request()
      .input('idContribuidor', sql.Int, IdContirbuidor)
      .input('Nombre', sql.VarChar, Nombre)
@@ -30,7 +30,8 @@ export async function crearDocumento(IdContirbuidor,Nombre,Extension,NoRev,DocAc
      .input('hoecode', sql.VarChar, HoeCode)
      .input('idModifica', sql.Int, idModifica)
      .input('fechaModifica', sql.Date, fechaModifica)
-     .query('INSERT INTO Documentos (ID_UserModifico,Fecha_Modificacion,ID_Contribuidor,Nombre,Extension,No_Rev,Doc_Actual,Fecha_Carga,Estatus_Seguimiento,Estatus,ID_Carpeta,ID_Revisor1,ID_Revisor2,ID_Revisor3,HOE_Code,Document_Type_Hoe) OUTPUT INSERTED.ID_DOC VALUES(@idModifica,@fechaModifica,@idContribuidor,@Nombre,@Ext,@NoRev,@DocActual,@FechaC,@EstatusS,@Estatus,@carpeta,@rev1,@rev2,@rev3,@hoecode,@doctype)')
+     .input('Version_Anterior',sql.Int,Version_Anterior)
+     .query('INSERT INTO Documentos (ID_UserModifico,Fecha_Modificacion,ID_Contribuidor,Nombre,Extension,No_Rev,Doc_Actual,Fecha_Carga,Estatus_Seguimiento,Estatus,ID_Carpeta,ID_Revisor1,ID_Revisor2,ID_Revisor3,HOE_Code,Document_Type_Hoe,ID_Version_Anterior) OUTPUT INSERTED.ID_DOC VALUES(@idModifica,@fechaModifica,@idContribuidor,@Nombre,@Ext,@NoRev,@DocActual,@FechaC,@EstatusS,@Estatus,@carpeta,@rev1,@rev2,@rev3,@hoecode,@doctype,@Version_Anterior)')
 }   
 
 export async function actualizarDoc(IdContirbuidor,Nombre,Extension,NoRev,DocActual,FechaCarga,FechaVencimiento,Estatus_Seguimiento,Estatus,Id_VerAnterior,IDcarpeta,DocumentTypeHoe,Revisor1,Revisor2,Revisor3,HoeCode){
