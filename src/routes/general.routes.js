@@ -41,7 +41,11 @@ const {
     searchcarpet,
     deletegroupsf,
     deletegroupsimple,
-    renamecarpetdb
+    renamecarpetdb,
+
+
+    //*Reports 
+    reportsgrafics
     
 } = require('../controllers/general.controllers')
 
@@ -91,6 +95,8 @@ router.post('/updatedocscar',updatedocscar)
 router.post('/searchcarpet',searchcarpet)
 router.post('/renamecarpetdb',renamecarpetdb)
 
+//*Reports
+router.post('/reportsgrafics',reportsgrafics)
 
 router.get('/',hello);
 

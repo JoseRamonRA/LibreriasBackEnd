@@ -348,7 +348,6 @@ const general={
 
     updatedocscar:async (req,res)=>{
         try{
-            console.log(req.body)
             const aux = await new sql.Request(); 
             const resu = await aux.query(`update Documentos set ID_Carpeta =${req.body.idcarpet} where ID_DOC=${req.body.idoc}`);
 
@@ -1236,8 +1235,6 @@ const general={
 
     movefiledir:async(req,res)=>{
 
-        console.log(req.body)
-  
         const fs = require('fs-extra')
         // Source file
         const src = `./uploads/${req.body.move}`;
@@ -1431,11 +1428,11 @@ const general={
         try{
         const aux = await new sql.Request();
         switch(req.body.role){
-            case 'admin':var resu = await aux.query(`select * from Documentos Where Estatus!=4 order by ${req.body.colum} ${req.body.order};`);break;
-            case 'revisor':var resu = await aux.query(`select * from Documentos where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser} or Estatus=1) order by ${req.body.colum} ${req.body.order};`);break;
-            case 'contribuidor':var resu = await aux.query(`select * from Documentos where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser} or Estatus=1) order by ${req.body.colum} ${req.body.order};`);break;
-            case 'visitante':var resu = await aux.query(`select * from Documentos Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
-            default:var resu = await aux.query(`select * from Documentos Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
+            case 'admin':var resu = await aux.query(`select * from DocsNotBinary Where Estatus!=4 order by ${req.body.colum} ${req.body.order};`);break;
+            case 'revisor':var resu = await aux.query(`select * from DocsNotBinary where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser} or Estatus=1) order by ${req.body.colum} ${req.body.order};`);break;
+            case 'contribuidor':var resu = await aux.query(`select * from DocsNotBinary where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser} or Estatus=1) order by ${req.body.colum} ${req.body.order};`);break;
+            case 'visitante':var resu = await aux.query(`select * from DocsNotBinary Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
+            default:var resu = await aux.query(`select * from DocsNotBinary Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
         }
         
             
@@ -1764,46 +1761,26 @@ const general={
     reportsgrafics: async (req,res)=>{
 
         try{
-            const fs = require('fs');
-            const urls = `http://localhost:4000/uploads/`;
-
-            function document(url,dir,ID_DOC,ID_Contribuidor,Nombre,Extension,No_Rev,Doc_Actual,Fecha_Carga,Fecha_Vencimiento,Estatus_Seguimiento,Estatus,ID_Version_Anterior,ID_Version_Sig,ID_Carpeta,ID_Revisor1,ID_Revisor2,ID_Revisor3,HOE_Code,Document_Type_Hoe,ID_UserModifico,Fecha_Modificacion,Area,Shop,Lenguaje,Ane){
-                this.url = url;
-                this.dir = dir;
-                this.ID_DOC = ID_DOC;
-                this.ID_Contribuidor = ID_Contribuidor;
-                this.Nombre = Nombre;
-                this.Extension = Extension;
-                this.No_Rev = No_Rev;
-                this.Doc_Actual = Doc_Actual;
-                this.Fecha_Carga = Fecha_Carga;
-                this.Fecha_Vencimiento = Fecha_Vencimiento;
-                this.Estatus_Seguimiento = Estatus_Seguimiento;
-                this.Estatus = Estatus;
-                this.ID_Version_Anterior= ID_Version_Anterior;
-                this.ID_Version_Sig = ID_Version_Sig;
-                this.ID_Carpeta = ID_Carpeta;
-                this.ID_Revisor1 = ID_Revisor1;
-                this.ID_Revisor2 = ID_Revisor2;
-                this.ID_Revisor3 = ID_Revisor3;
-                this.HOE_Code = HOE_Code;
-                this.Document_Type_Hoe = Document_Type_Hoe;
-                this.ID_UserModifico = ID_UserModifico;
-                this.Fecha_Modificacion = Fecha_Modificacion;
-                this.Area=Area;
-                this.Shop=Shop;
-                this.Lenguaje = Lenguaje;
-                this.Ane = Ane;
-            }
-            
-            const aux = await new sql.Request();
-            const resu = await aux.query(`select * from Documentos where Estatus=${req.body.estatus};`);
-            
-            var archivoHOE =resu.recordset;
-            var arr= [];
-            var data=[];
-
             const path = require('path');
+            const fs = require('fs');
+
+            const aux = await new sql.Request();
+            const resu = await aux.query(`select * from DocsNotBinary where Estatus=${req.body.esta};`);  
+
+            var archivoHOE= resu.recordset;
+            var data=[];
+            var arr=[];
+            var datafolder=[];
+
+            if(req.body.ruta==''){
+                var urls = `http://localhost:4000/uploads${req.body.ruta}/`;
+                var position = 0;
+            }else{
+                var urls = `http://localhost:4000/uploads/${req.body.ruta}/`;
+                var position = req.body.ruta.split('/').length;
+                
+                
+            }     
 
             function scanDirs(directoryPath){
             try{
@@ -1819,7 +1796,7 @@ const general={
                     if(dataFile){
                         data.push(
                         {
-                            path: `http://localhost:4000\\${file}`,
+                            path: `http://localhost:4000/${file}`,
                             isDirectory: dataFile.isDirectory(),
                         });
 
@@ -1830,46 +1807,105 @@ const general={
                 }
             }catch(e){}
             }
-            
-            scanDirs('./uploads');
 
-         
-    
-            var carpetas = await aux.query(`select * from Carpeta order by ID_C desc;`);
-            var car= carpetas.recordset;
-            for(var i=0;i<car.length;i++){
-    
-                for(var j=0;j<ls.length;j++){
-                    const file  = path.join(`./uploads/${req.body.ruta}`,ls[j]);
-                    var dataFile =null;
-    
-                    try{
-                        dataFile =fs2.lstatSync(file);
-                    }catch(e){}
-                    
-                    if(dataFile.isDirectory() && car[i].Nombre==ls[j].split('§').pop()){
-                        var ne = new documentor(car[i].ID_C,car[i].Nombre,'',`${urls}${ls[j]}`,dataFile.isDirectory(),"PCQ0110-01","procedure","calidad","press","N","spanish","2022-05-05",2,"november 10,21",0,0,0,0,0);
-                        arr.unshift(ne);
+            function document(id,contribuidor,nam,ext,url,dir,cod,tdo,are,sho,nor,len,fev,ane,mod,rev1,rev2,rev3,modifica,estatus,ID_User_Asignado){
+                this.ID_DOC=id;
+                this.ID_Contribuidor = contribuidor;
+                this.Nombre= nam;
+                this.Extension = ext;
+                this.url = url;
+                this.dir = dir;
+                this.HOE_Code = cod;
+                this.Document_Type_Hoe = tdo;
+                this.are = are;
+                this.sho = sho;
+                this.No_Rev = nor;
+                this.len = len;
+                this.Fecha_Vencimiento = fev;
+                this.ane = ane;
+                this.Fecha_Modificacion = mod;
+                this.ID_Revisor1 = rev1;
+                this.ID_Revisor2 = rev2;
+                this.ID_Revisor3 = rev3;
+                this.ID_UserModifico = modifica;
+                this.Estatus = estatus;
+                this.ID_User_Asignado = ID_User_Asignado;
+            }
+            
+            scanDirs(`./uploads/${req.body.ruta}`);
+
+            for(var i=0;i<archivoHOE.length;i++){
+
+                for(var j=0;j<data.length;j++){
+                    var otro =data[j].path.split('\\').pop()
+                    var comp = Number(otro.split('Â§',1))
+                    var ruta = data[j].path.split('\\')
+                    ruta = ruta.join('/')
+                    if(archivoHOE[i].ID_DOC== comp){
+                        var ne = new document(archivoHOE[i].ID_DOC,archivoHOE[i].ID_Contribuidor,archivoHOE[i].Nombre, archivoHOE[i].Extension,ruta,data[j].isDirectory,archivoHOE[i].HOE_Code,archivoHOE[i].Document_Type_Hoe,"calidad","press",archivoHOE[i].No_Rev,"Ingles","2022-05-05",2,archivoHOE[i].Fecha_Modificacion,archivoHOE[i].ID_Revisor1,archivoHOE[i].ID_Revisor2,archivoHOE[i].ID_Revisor3,archivoHOE[i].ID_UserModifico,archivoHOE[i].Estatus,archivoHOE[i].ID_User_Asignado);
+                        arr.push(ne);break;
                     }
                 }
             }
-     
+
+
+
+            var ls =fs.readdirSync(`./uploads/${req.body.ruta}`);
+
+            var carpetas = await aux.query(`select * from Carpeta;`);
+            var car= carpetas.recordset;
+
+            for(var i=0;i<car.length;i++){
+                for(var j=0;j<ls.length;j++){
+                    const file  = path.join(`./uploads/${req.body.ruta}`,ls[j]);
+                    var dataFile =null;
+
+                    try{
+                        dataFile =fs.lstatSync(file);
+                    }catch(e){}
+                    
+                    if(dataFile.isDirectory() && car[i].Nombre==ls[j].split('§').pop()){
+                        datafolder.push({
+                            ID_C:car[i].ID_C,
+                            ID_C_S:car[i].ID_Carpeta_Superior,
+                            Nombre:car[i].Nombre,
+                            Dir:dataFile.isDirectory(),
+                            URl:`${urls}${ls[j]}`,
+                            Arch_T:0,
+                        })
+                    }
+                }
+            }
+
+            for(var i=0;i<arr.length;i++){
+                for(j=0;j<datafolder.length;j++){
+                    var nombre =arr[i].url.split('uploads/').pop();
+                    var idfold =Number((nombre.split('/',position+1).pop().toString()).split('§',1))
+                    
+                    if(idfold==datafolder[j].ID_C){
+                        datafolder[j].Arch_T=datafolder[j].Arch_T+1;
+                    }
+                }
+            }
+
+            
             return res.json({
                 success: true,
                 operation:arr,
-                message: `Se devolvieron los archivos ordenados por ${req.body.colum} de manerea ${req.body.order}`
+                operation2:datafolder,
+                message: `Returned files in status =${req.body.esta} and folders`
             })
             
-            }catch(e){
-                console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`documentosorderby`))
-                console.log(e);
-        
-                return res.json({
-                success: false,
-                operation:e,
-                message: `No se pudo haceer tu consulta fallo la base de datos `
-                })
-            }
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`reportsgrafics`))
+            console.log(e);
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos ==> reportsgrafics`
+            })
+        }
+            
 
 
         
