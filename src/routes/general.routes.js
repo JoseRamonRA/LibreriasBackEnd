@@ -43,6 +43,8 @@ const {
     deletegroupsimple,
     renamecarpetdb,
 
+    downxlsxgrafic,
+    DownloadXLSX,
 
     //*Reports 
     reportsgrafics
@@ -99,6 +101,10 @@ router.post('/renamecarpetdb',renamecarpetdb)
 router.post('/reportsgrafics',reportsgrafics)
 
 router.get('/',hello);
+
+//*prueba
+router.post('/downxlsxgrafic',downxlsxgrafic)
+router.post('/DownloadXLSX',DownloadXLSX)
 
 
 module.exports = router;

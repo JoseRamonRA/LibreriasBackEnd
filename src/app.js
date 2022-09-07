@@ -23,6 +23,7 @@ app.use(express.json());
 app.use(require('./routes'))
 
 app.use('/uploads', express.static(path.resolve('uploads')));
+app.use('/Documents', express.static(path.resolve('src/Documents')));
 
 
 export default app;
