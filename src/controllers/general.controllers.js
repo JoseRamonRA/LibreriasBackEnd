@@ -382,8 +382,21 @@ const general={
 
     createcarpet:async (req,res)=>{
         try{
+            const fs = require('fs');
+            var rutas = req.body.rute;
+
+            console.log(rutas);
+
             const aux = await new sql.Request(); 
-            const resu = await aux.query(`insert into Carpeta (Nombre,ID_Carpeta_Superior) values ('${req.body.name}',${req.body.carsup})`);
+            const resu = await aux.query(`EXEC Devolvedidcarp '${req.body.name}',${req.body.carsup}`);
+
+            var IDC = resu.recordset[0];
+
+            if(rutas!=''){
+                fs.mkdirSync(`./uploads/${rutas}/${IDC.LAST_ID}§${req.body.name}`,{recursive:true});
+            }else{
+                fs.mkdirSync(`./uploads/${IDC.LAST_ID}§${req.body.name}`,{recursive:true});
+            }
 
             if(!resu){
                 return res.json({
@@ -401,7 +414,7 @@ const general={
 
         }catch(e){
             console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`createcarpet`))
-    
+            console.log(e);
             return res.json({
             success: false,
             operation:e,
@@ -692,6 +705,7 @@ const general={
     newroute:async (req,res)=>{
         try{
             var rutas = req.body.ruta;
+            
             const fs = require('fs');
             console.log(rutas)
             fs.mkdirSync(`./uploads/${rutas}`,{recursive:true});
