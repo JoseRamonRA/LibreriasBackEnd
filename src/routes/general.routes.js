@@ -43,8 +43,9 @@ const {
     deletegroupsimple,
     renamecarpetdb,
 
-    downxlsxgrafic,
-    DownloadXLSX,
+    // downxlsxgrafic,
+    // DownloadXLSX,
+    DownloadXLXSGra,
 
     //*Reports 
     reportsgrafics
@@ -102,9 +103,11 @@ router.post('/reportsgrafics',reportsgrafics)
 
 router.get('/',hello);
 
-//*prueba
-router.post('/downxlsxgrafic',downxlsxgrafic)
-router.post('/DownloadXLSX',DownloadXLSX)
+//*prueba libreria XLSX XLSX-POPULATE
+// router.post('/downxlsxgrafic',downxlsxgrafic)
+// router.post('/DownloadXLSX',DownloadXLSX)
 
+//* pruebas Libreria EXCEL4NODE
+router.post('/DownloadXLXSGra',DownloadXLXSGra)
 
 module.exports = router;

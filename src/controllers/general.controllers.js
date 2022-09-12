@@ -2,6 +2,8 @@ const chalk = require('chalk');
 
 const path = require ('path');
 
+const fsread = require('fs')
+
 import e from 'cors';
 import sql from '../Connection/conexion';
 
@@ -380,8 +382,21 @@ const general={
 
     createcarpet:async (req,res)=>{
         try{
+            const fs = require('fs');
+            var rutas = req.body.rute;
+
+            console.log(rutas);
+
             const aux = await new sql.Request(); 
-            const resu = await aux.query(`insert into Carpeta (Nombre,ID_Carpeta_Superior) values ('${req.body.name}',${req.body.carsup})`);
+            const resu = await aux.query(`EXEC Devolvedidcarp '${req.body.name}',${req.body.carsup}`);
+
+            var IDC = resu.recordset[0];
+
+            if(rutas!=''){
+                fs.mkdirSync(`./uploads/${rutas}/${IDC.LAST_ID}§${req.body.name}`,{recursive:true});
+            }else{
+                fs.mkdirSync(`./uploads/${IDC.LAST_ID}§${req.body.name}`,{recursive:true});
+            }
 
             if(!resu){
                 return res.json({
@@ -399,7 +414,7 @@ const general={
 
         }catch(e){
             console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`createcarpet`))
-    
+            console.log(e);
             return res.json({
             success: false,
             operation:e,
@@ -690,6 +705,7 @@ const general={
     newroute:async (req,res)=>{
         try{
             var rutas = req.body.ruta;
+            
             const fs = require('fs');
             console.log(rutas)
             fs.mkdirSync(`./uploads/${rutas}`,{recursive:true});
@@ -1328,11 +1344,11 @@ const general={
         try{
             const aux = await new sql.Request();
             switch(req.body.role){
-                case 'admin':var resu = await aux.query(`select * from DocsComplete Where Estatus!=4 order by ${req.body.colum} ${req.body.order};`);break;
-                case 'revisor':var resu = await aux.query(`select * from DocsComplete where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser} or Estatus=1) order by ${req.body.colum} ${req.body.order};`);break;
-                case 'contribuidor':var resu = await aux.query(`select * from DocsComplete where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser} or Estatus=1) order by ${req.body.colum} ${req.body.order};`);break;
-                case 'visitante':var resu = await aux.query(`select * from DocsComplete Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
-                default:var resu = await aux.query(`select * from DocsComplete Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
+                case 'admin':var resu = await aux.query(`select * from DocsNotBinary Where Estatus!=4 order by ${req.body.colum} ${req.body.order};`);break;
+                case 'revisor':var resu = await aux.query(`select * from DocsNotBinary where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser} or Estatus=1) order by ${req.body.colum} ${req.body.order};`);break;
+                case 'contribuidor':var resu = await aux.query(`select * from DocsNotBinary where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser} or Estatus=1) order by ${req.body.colum} ${req.body.order};`);break;
+                case 'visitante':var resu = await aux.query(`select * from DocsNotBinary Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
+                default:var resu = await aux.query(`select * from DocsNotBinary Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
             }
             
         var archivoHOE= resu.recordset;
@@ -1949,119 +1965,185 @@ const general={
         }   
     },
 
-    downxlsxgrafic:async(req,res)=>{
+    // downxlsxgrafic:async(req,res)=>{
 
-        const XlsxPopulate = require('xlsx-populate');
-        try{
-        // Load a new blank workbook
-        XlsxPopulate.fromBlankAsync()
-        .then(workbook => {
-            // Modify the workbook.
-            const totalColumns = req.body.tabled[0].length;
-            const sheet1 = workbook.sheet(0).name(`Archivos_${req.body.estado}_SOS_HOE`);
-            const num = req.body.tabled.length-1;
+    //     const XlsxPopulate = require('xlsx-populate');
+    //     try{
+    //     // Load a new blank workbook
+    //     XlsxPopulate.fromBlankAsync()
+    //     .then(workbook => {
+    //         // Modify the workbook.
+    //         const totalColumns = req.body.tabled[0].length;
+    //         const sheet1 = workbook.sheet(0).name(`Archivos_${req.body.estado}_SOS_HOE`);
+    //         const num = req.body.tabled.length-1;
 
-            // sheet1.column("E").width(25).hidden(false);
-            sheet1.cell("C3").value(`Archivos ${req.body.estado} SOS/HOE`).style({"fontSize":34,bold:true});
-            sheet1.cell("B7").value(`Total de Archivos ${req.body.estado}:`).style("fontSize",28);
-            sheet1.cell("D7").value(num).style({bold:true,textDirection:"left",fontColor: "0e648c",fontSize:28});
-            sheet1.cell("F8").value(`Fecha de emision del reporte:`).style("bold",true);
-            sheet1.cell("G8").value(`${req.body.fech}`).style({bold:true,textDirection:"left",fontColor: "0e648c"});
-            sheet1.cell("B10").value(req.body.tabled).style({fill:'ffffff'});
+    //         // sheet1.column("E").width(25).hidden(false);
+    //         sheet1.cell("C3").value(`Archivos ${req.body.estado} SOS/HOE`).style({"fontSize":34,bold:true});
+    //         sheet1.cell("B7").value(`Total de Archivos ${req.body.estado}:`).style("fontSize",28);
+    //         sheet1.cell("D7").value(num).style({bold:true,textDirection:"left",fontColor: "0e648c",fontSize:28});
+    //         sheet1.cell("F8").value(`Fecha de emision del reporte:`).style("bold",true);
+    //         sheet1.cell("G8").value(`${req.body.fech}`).style({bold:true,textDirection:"left",fontColor: "0e648c"});
+    //         sheet1.cell("B10").value(req.body.tabled).style({fill:'ffffff'});
 
-            const endColumn = String.fromCharCode(65 + totalColumns);
-            sheet1.row(10).style("bold", true);
-            sheet1.range("B10:" + endColumn + "10").style("fill", "BFBFBF");
+    //         const endColumn = String.fromCharCode(65 + totalColumns);
+    //         sheet1.row(10).style("bold", true);
+    //         sheet1.range("B10:" + endColumn + "10").style("fill", "BFBFBF");
             
-            for(var i=0;i<totalColumns;i++){
-                var col = String.fromCharCode(64 + (i+2));
-                if(i==0){
-                    sheet1.column(`${col}`).width(55).hidden(false);
-                    sheet1.cell(`${col}10`).style("fill", "000000");
-                    sheet1.cell(`${col}10`).style("fontColor", "ffffff");
-                }else{
-                    sheet1.column(`${col}`).width(35).hidden(false);
-                }
+    //         for(var i=0;i<totalColumns;i++){
+    //             var col = String.fromCharCode(64 + (i+2));
+    //             if(i==0){
+    //                 sheet1.column(`${col}`).width(55).hidden(false);
+    //                 sheet1.cell(`${col}10`).style("fill", "000000");
+    //                 sheet1.cell(`${col}10`).style("fontColor", "ffffff");
+    //             }else{
+    //                 sheet1.column(`${col}`).width(35).hidden(false);
+    //             }
                 
-            }
-            // Write to file.
-            return workbook.toFileAsync("src/Documents/filegenerala.xlsx");
+    //         }
+    //         // Write to file.
+    //         return workbook.toFileAsync("src/Documents/filegenerala.xlsx");
 
 
-        });
+    //     });
  
 
-        return res.json({
-            success: false,
-            operation:`http://localhost:4000/Documents/filegenerala.xlsx`,
-            message: `Return file XLSX`
-            })
-        }catch(e){
-            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`downxlsxgrafic`))
-            console.log(e);
-            return res.json({
-            success: false,
-            operation:e,
-            message: `No se pudo haceer tu consulta fallo la base de datos ==> downxlsxgrafic`
-            })
-        } 
+    //     return res.json({
+    //         success: false,
+    //         operation:`http://localhost:4000/Documents/filegenerala.xlsx`,
+    //         message: `Return file XLSX`
+    //         })
+    //     }catch(e){
+    //         console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`downxlsxgrafic`))
+    //         console.log(e);
+    //         return res.json({
+    //         success: false,
+    //         operation:e,
+    //         message: `No se pudo haceer tu consulta fallo la base de datos ==> downxlsxgrafic`
+    //         })
+    //     } 
         
-    },
-    DownloadXLSX:async(req,res)=>{
+    // },
 
-        const XlsxPopulate = require('xlsx-populate');
+    // DownloadXLSX:async(req,res)=>{
+
+    //     const XlsxPopulate = require('xlsx-populate');
+    //     try{
+
+    //         console.log(req.body);
+
+
+
+    //     // Load a new blank workbook
+    //     XlsxPopulate.fromBlankAsync()
+    //     .then(workbook => {
+    //         // Modify the workbook.
+
+    //         const folders = req.body.tabled;
+
+    //         const sheet1 = workbook.sheet(0).name(`Archivos_${req.body.estado}_SOS_HOE`);
+    //         const num = req.body.tabled.length-1;
+
+
+    //         const endColumn = String.fromCharCode(69);
+    //         console.log('*********************');
+    //         console.log(endColumn);
+    //         const endColumn2 = String.fromCharCode(67);
+    //         console.log('*********************');
+    //         console.log(endColumn2);
+
+    //         sheet1.cell("C4").value(`Archivos ${req.body.estado} SOS/HOE`).style({"fontSize":30,bold:true,textDirection:"Center"});
+    //         sheet1.range("C4:" + endColumn2 + "4").style("fill", "0E648C");
+
+    //         sheet1.cell("D7").value(`Total de Documentos ${req.body.estado} por Planta`).style({"fontSize":22,bold:true,textDirection:"Center"});
+    //         sheet1.range("D7:" + endColumn2 + "7").style("fill", "0E648C");sheet1.range("D8:" + endColumn2 + "8").style("fill", "0E648C");
+            
+    //         sheet1.cell("D7").value(`Total de Documentos ${req.body.estado} por Planta`).style({"fontSize":22,bold:true,textDirection:"Center"});
+
+    //         for(var i=0;i<folders.length;i++){
+    //             console.log(folders[i]);
+                
+    //         }
+
+
+    //         // Write to file.
+    //         return workbook.toFileAsync("src/Documents/filegrafics.xlsx");
+
+
+    //     });
+ 
+
+    //     return res.json({
+    //         success: false,
+    //         operation:`http://localhost:4000/Documents/filegrafics.xlsx`,
+    //         message: `Return file XLSX_GRAFICS`
+    //         })
+    //     }catch(e){
+    //         console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`DownloadXLSX`))
+    //         console.log(e);
+    //         return res.json({
+    //         success: false,
+    //         operation:e,
+    //         message: `No se pudo haceer tu consulta fallo la base de datos ==> DownloadXLSX`
+    //         })
+    //     } 
+        
+    // }
+
+    DownloadXLXSGra: async (req,res)=>{
+
         try{
-
-            console.log(req.body);
-
-
-
-        // Load a new blank workbook
-        XlsxPopulate.fromBlankAsync()
-        .then(workbook => {
-            // Modify the workbook.
-
-            const folders = req.body.tabled;
-
-            const sheet1 = workbook.sheet(0).name(`Archivos_${req.body.estado}_SOS_HOE`);
-            const num = req.body.tabled.length-1;
+            //* Require library
+            var xl = require('excel4node');
 
 
-            const endColumn = String.fromCharCode(69);
-            console.log('*********************');
-            console.log(endColumn);
-            const endColumn2 = String.fromCharCode(67);
-            console.log('*********************');
-            console.log(endColumn2);
+            // Create a new instance of a Workbook class
+            var wb = new xl.Workbook();
+
+             //*Estilos
+             var style = wb.createStyle({
+                font: {
+                  color: '#FF0800',
+                  size: 12,
+                },
+                numberFormat: '$#,##0.00; ($#,##0.00); -',
+              });
+
+            // Add Worksheets to the workbook
+            var ws = wb.addWorksheet('Sheet 1');
+
+            // Set value of cell A2 to 'string' styled with paramaters of style
+            ws.cell('A5').string('string').style(style);
+
+            ws.addImage({
+                image: fsread.readFileSync(path.resolve('src/Documents/Images', 'logocompas.png')),
+                name: 'logo', // name is not required param
+                type: 'picture',
+                position: {
+                  type: 'absoluteAnchor',
+                  x: '1in',
+                  y: '2in',
+                },
+              });
 
 
-            for(var i=0;i<folders.length;i++){
-                console.log(folders[i]);
-            }
+            wb.write('src/Documents/Tests/Excel.xlsx');
 
 
-            // Write to file.
-            return workbook.toFileAsync("src/Documents/filegrafics.xlsx");
-
-
-        });
- 
-
-        return res.json({
-            success: false,
-            operation:`http://localhost:4000/Documents/filegrafics.xlsx`,
-            message: `Return file XLSX`
+            return res.json({
+                success:true,
+                operation:`http://localhost:4000/tests/Excel.xlsx`,
+                message:'Return file XLSX_GRAFICS'
             })
+
         }catch(e){
-            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`downxlsxgrafic`))
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`DownloadXLXSGra`))
             console.log(e);
             return res.json({
             success: false,
             operation:e,
-            message: `No se pudo haceer tu consulta fallo la base de datos ==> downxlsxgrafic`
+            message: `No se pudo haceer tu consulta fallo la base de datos ==> DownloadXLXSGra`
             })
-        } 
-        
+        }
     }
 
 
