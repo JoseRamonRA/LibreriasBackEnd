@@ -100,6 +100,18 @@ export async function aprobacionDoc(id,Estatus,Estatus_Seg,IdUserM,FechaMo){
    .input('fechaModifico', sql.Date, FechaMo)
    .query('UPDATE Documentos SET Estatus = @estatus, Estatus_Seguimiento = @estatusSeg, ID_UserModifico = @userModifico, Fecha_Modificacion = @fechaModifico WHERE ID_DOC = @ID')
 }
+
+// Insertada por Gerardo 12/09/2022 como sustiucion a la funcion crearTarea
+export async function actualizarSiguienteTarea(IdDoc,IDflujo,IdUser,FechaIni,Estatus){
+    return await new sql.Request()
+    .input('doc', sql.Int, IdDoc)
+    .input('flujo',sql.Int,IDflujo)
+    .input('userasignado',sql.Int,IdUser)
+    .input('estatus',sql.Int,Estatus)
+    .input('fechaIni',sql.Date,FechaIni)
+    .query('UPDATE Tareas SET Estatus = 1, Fecha_Inicio = @fechaIni WHERE ID_Doc = @doc AND ID_Flujo = @flujo and ID_User_Asignado = @userasignado');
+}
+
 export async function rechazarDoc(id,Estatus,IdUserM,FechaMo){
     return await new sql.Request()
     .input('ID',sql.Int, id)
