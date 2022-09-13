@@ -1,5 +1,21 @@
 import { Router } from "express";
 const router = Router();
+
+const multer = require('multer');
+
+var storage = multer.diskStorage({
+    destination:function(req,file,cb){
+        
+        cb(null,'./src/Documents/Images')
+    },
+    filename:function(req,file,cb){
+        cb(null,`${file.originalname}`)
+    }
+})
+
+const upload = multer({storage:storage})
+
+
 const {
     getfiles,
     getfiles2,
@@ -46,6 +62,8 @@ const {
     // downxlsxgrafic,
     // DownloadXLSX,
     DownloadXLXSGra,
+    DownloadXLXSList,
+    DelateIMGXLSX,
 
     //*Reports 
     reportsgrafics
@@ -101,7 +119,7 @@ router.post('/renamecarpetdb',renamecarpetdb)
 //*Reports
 router.post('/reportsgrafics',reportsgrafics)
 
-router.get('/',hello);
+router.get('/hello',hello);
 
 //*prueba libreria XLSX XLSX-POPULATE
 // router.post('/downxlsxgrafic',downxlsxgrafic)
@@ -109,5 +127,23 @@ router.get('/',hello);
 
 //* pruebas Libreria EXCEL4NODE
 router.post('/DownloadXLXSGra',DownloadXLXSGra)
+router.post('/DownloadXLXSList',DownloadXLXSList);
+router.post('/DelateIMGXLSX',DelateIMGXLSX);
+
+
+//*routerpost
+router.post('/updateSS',upload.single('myImg'),async(req,res)=>{
+try {
+    return res.json({
+        success:true,
+        operation:req.body.clave,
+        message:'Return imgname'
+    })
+
+   } catch (error) {
+       console.log(error.message);
+       res.status(400).json({ error });
+   }
+})
 
 module.exports = router;

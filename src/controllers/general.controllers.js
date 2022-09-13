@@ -4,6 +4,10 @@ const path = require ('path');
 
 const fsread = require('fs')
 
+const fsGlobal = require('fs');
+
+
+
 import e from 'cors';
 import sql from '../Connection/conexion';
 
@@ -1513,7 +1517,7 @@ const general={
             }
         }
 
-        var carpetas = await aux.query(`select * from Carpeta order by ID_C desc;`);
+        var carpetas = await aux.query(`select * from Carpeta order by ID_C ${req.body.order};`);
         var car= carpetas.recordset;
 
         for(var i=0;i<car.length;i++){
@@ -2057,28 +2061,130 @@ const general={
 
     DownloadXLXSGra: async (req,res)=>{
 
+        const datos = req.body.tabled;
+
+        const keypar = req.body.clave;
+
         try{
             //* Require library
             var xl = require('excel4node');
 
-
             // Create a new instance of a Workbook class
             var wb = new xl.Workbook();
 
-             //*Estilos
-             var style = wb.createStyle({
-                font: {
-                  color: '#FF0800',
-                  size: 12,
+            var options = {
+                
+                sheetView: {
+                    showGridLines: false, // Flag indicating whether the sheet should have gridlines enabled or disabled during view
                 },
-                numberFormat: '$#,##0.00; ($#,##0.00); -',
-              });
+              };
 
             // Add Worksheets to the workbook
-            var ws = wb.addWorksheet('Sheet 1');
+            var ws = wb.addWorksheet(`${req.body.estado}_SOSHOE`,options);
 
-            // Set value of cell A2 to 'string' styled with paramaters of style
-            ws.cell('A5').string('string').style(style);
+            //? Styles Columns
+            const title = wb.createStyle({
+                font: {
+                  color: '#000000',
+                  size: 48,
+                  bold:true,
+                }
+            });
+
+            var tittle2 = wb.createStyle({
+                font: {
+                  color: '#ffffff',
+                  size: 18,
+                  bold:true,
+                },
+                fill: { 
+                    type: 'pattern', // the only one implemented so far.
+                    patternType: 'solid', // most common.
+                    fgColor: '#0E648C', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                    // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                },
+                alignment: { // §18.8.1
+                    horizontal: 'center',
+                },
+            });
+
+            var backblue =wb.createStyle({
+                fill: { 
+                    type: 'pattern', // the only one implemented so far.
+                    patternType: 'solid', // most common.
+                    fgColor: '#0E648C', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                    // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                }
+            });
+
+            var backgray =wb.createStyle({
+                fill: { 
+                    type: 'pattern', // the only one implemented so far.
+                    patternType: 'solid', // most common.
+                    fgColor: '#BFBFBF', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                    // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                }
+            });
+
+            var titlegray=wb.createStyle({
+                font: {
+                    color: '#000000',
+                    size: 18,
+                    bold:true,
+                  },
+                  fill: { 
+                      type: 'pattern', // the only one implemented so far.
+                      patternType: 'solid', // most common.
+                      fgColor: '#BFBFBF', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                      // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                  },
+                  alignment: { // §18.8.1
+                      horizontal: 'center',
+                  },
+            });
+
+            var subtitlegray=wb.createStyle({
+                font: {
+                    color: '#000000',
+                    size: 12,
+                    bold:true,
+                  },
+                  fill: { 
+                      type: 'pattern', // the only one implemented so far.
+                      patternType: 'solid', // most common.
+                      fgColor: '#BFBFBF', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                      // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                  },
+                  alignment: { // §18.8.1
+                      horizontal: 'left',
+                  },
+            });
+
+            var bordergray = wb.createStyle({
+                border: { // §18.8.4 border (Border)
+                    left: {
+                        style: 'thin', //§18.18.3 ST_BorderStyle (Border Line Styles) ['none', 'thin', 'medium', 'dashed', 'dotted', 'thick', 'double', 'hair', 'mediumDashed', 'dashDot', 'mediumDashDot', 'dashDotDot', 'mediumDashDotDot', 'slantDashDot']
+                        color: '#BFBFBF' // HTML style hex value
+                    },
+                    right: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    top: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    bottom: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    diagonal: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    
+                },
+            });
 
             ws.addImage({
                 image: fsread.readFileSync(path.resolve('src/Documents/Images', 'logocompas.png')),
@@ -2086,18 +2192,78 @@ const general={
                 type: 'picture',
                 position: {
                   type: 'absoluteAnchor',
-                  x: '1in',
-                  y: '2in',
+                  x: '2in',
+                  y: '0.5in',
                 },
-              });
+            });
 
+            ws.addImage({
+                image: fsread.readFileSync(path.resolve('src/Documents/Images', `${keypar}.png`)),
+                name: 'logo', // name is not required param
+                type: 'picture',
+                position: {
+                    type: 'twoCellAnchor',
+                    from: {
+                      col: 10,
+                      colOff: 0,
+                      row: 6,
+                      rowOff: 0,
+                    },
+                    to: {
+                      col: 15,
+                      colOff: 0,
+                      row: 26,
+                      rowOff: 0,
+                    },
+                },
+            });
 
-            wb.write('src/Documents/Tests/Excel.xlsx');
+            
+            ws.column(4).setWidth(20);
+
+            ws.cell(3,7).string(`Documentos ${req.body.estado} Por Carpeta`).style(title);
+            ws.cell(7,2,8,6).style(backblue)
+            ws.cell(7,4).string(`Total de documentos ${req.body.estado} por planta`).style(tittle2)
+            ws.cell(10,2,10,6).style(backgray);
+            ws.cell(10,4).string('Total Raiz SOS/HOE').style(titlegray)
+            ws.cell(11,4).number(0).style({font: {color: '#000000',size: 12,bold:true,},alignment: { horizontal: 'center',}})
+            ws.cell(11,2,11,6).style({border:{bottom:{style:'thick',color:'#BFBFBF'}}})
+            
+            var salt=0;
+            var totaldocs=0;
+
+            for(var i=0;i<datos.length;i++){
+                if(i%2==0){
+                    ws.cell(14+salt,2,14+salt,3).style({border:{bottom:{style:'thick',color:'#BFBFBF'}}})
+                    ws.cell(13+salt,3).style(backgray);
+                    ws.cell(13+salt,2).string(`TOTAL ${datos[i].ID_C}. ${datos[i].Nombre}`).style(subtitlegray);
+                    ws.cell(14+salt,2).number(datos[i].Arch_T).style({font: {color: '#000000',size: 12,bold:true,},alignment: { horizontal: 'right',},})
+                    totaldocs+=datos[i].Arch_T;
+                }else{
+                    ws.cell(14+salt,5,14+salt,6).style({border:{bottom:{style:'thick',color:'#BFBFBF'}}})
+                    ws.cell(13+salt,6).style(backgray);
+                    ws.cell(13+salt,5).string(`TOTAL ${datos[i].ID_C}. ${datos[i].Nombre}`).style(subtitlegray);
+                    ws.cell(14+salt,5).number(datos[i].Arch_T).style({font: {color: '#000000',size: 12,bold:true,},alignment: { horizontal: 'right',},})
+                    totaldocs+=datos[i].Arch_T;
+                    salt+=4;
+                }
+            }
+
+            ws.cell(13+salt+2,2,13+salt+2,6).style(backblue)
+            ws.cell(13+salt+2,4).string('TOTAL GENERAL').style(tittle2)
+            ws.cell(13+salt+3,4).number(totaldocs).style({font: {color: '#000000',size: 12,bold:true,},alignment: { horizontal: 'center',},})
+            ws.cell(14+salt+2,2,14+salt+2,6).style({border:{bottom:{style:'thick',color:'#BFBFBF'}}})
+
+            ws.cell(26,10).string('Fecha de emision del reporte:').style({font: {color: '#000000',size: 12,bold:true,},alignment: { horizontal: 'left',}})
+            ws.cell(26,13).string(`${req.body.fech}`).style({font: {color: '#0E648C',size: 12,bold:true,},alignment: { horizontal: 'left',}})
+
+            wb.write(`src/Documents/Tests/ReportsXLSXGrap${keypar}.xlsx`);
 
 
             return res.json({
                 success:true,
-                operation:`http://localhost:4000/tests/Excel.xlsx`,
+                operation:`http://localhost:4000/tests/ReportsXLSXGrap${keypar}.xlsx`,
+                operation2:keypar,
                 message:'Return file XLSX_GRAFICS'
             })
 
@@ -2108,6 +2274,250 @@ const general={
             success: false,
             operation:e,
             message: `No se pudo haceer tu consulta fallo la base de datos ==> DownloadXLXSGra`
+            })
+        }
+    },
+    
+    DownloadXLXSList: async (req,res)=>{
+
+        const datos = req.body.tabled;
+
+        const keypar = req.body.clave;
+
+        try{
+            //* Require library
+            var xl = require('excel4node');
+
+            // Create a new instance of a Workbook class
+            var wb = new xl.Workbook();
+
+            var options = {
+                
+                sheetView: {
+                    showGridLines: false, 
+                  // Flag indicating whether the sheet should have gridlines enabled or disabled during view
+                },
+              };
+
+            // Add Worksheets to the workbook
+            var ws = wb.addWorksheet(`${req.body.estado}_SOSHOE`,options);
+
+            //? Styles Columns
+            const title = wb.createStyle({
+                font: {
+                  color: '#000000',
+                  size: 48,
+                  bold:true,
+                }
+            });
+
+            var tittle2 = wb.createStyle({
+                font: {
+                  color: '#ffffff',
+                  size: 18,
+                  bold:true,
+                },
+                fill: { 
+                    type: 'pattern', // the only one implemented so far.
+                    patternType: 'solid', // most common.
+                    fgColor: '#0E648C', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                    // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                },
+                alignment: { // §18.8.1
+                    horizontal: 'center',
+                },
+            });
+
+            var backblue =wb.createStyle({
+                fill: { 
+                    type: 'pattern', // the only one implemented so far.
+                    patternType: 'solid', // most common.
+                    fgColor: '#0E648C', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                    // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                }
+            });
+
+            var backgray =wb.createStyle({
+                fill: { 
+                    type: 'pattern', // the only one implemented so far.
+                    patternType: 'solid', // most common.
+                    fgColor: '#BFBFBF', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                    // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                }
+            });
+
+            var titlegray=wb.createStyle({
+                font: {
+                    color: '#000000',
+                    size: 18,
+                    bold:true,
+                  },
+                  fill: { 
+                      type: 'pattern', // the only one implemented so far.
+                      patternType: 'solid', // most common.
+                      fgColor: '#BFBFBF', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                      // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                  },
+                  alignment: { // §18.8.1
+                      horizontal: 'center',
+                  },
+            });
+
+            var subtitlegray=wb.createStyle({
+                font: {
+                    color: '#000000',
+                    size: 12,
+                    bold:true,
+                  },
+                  fill: { 
+                      type: 'pattern', // the only one implemented so far.
+                      patternType: 'solid', // most common.
+                      fgColor: '#BFBFBF', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                      // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                  },
+                  alignment: { // §18.8.1
+                      horizontal: 'left',
+                  },
+            });
+
+            var bordergray = wb.createStyle({
+                border: { // §18.8.4 border (Border)
+                    left: {
+                        style: 'thin', //§18.18.3 ST_BorderStyle (Border Line Styles) ['none', 'thin', 'medium', 'dashed', 'dotted', 'thick', 'double', 'hair', 'mediumDashed', 'dashDot', 'mediumDashDot', 'dashDotDot', 'mediumDashDotDot', 'slantDashDot']
+                        color: '#BFBFBF' // HTML style hex value
+                    },
+                    right: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    top: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    bottom: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    diagonal: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    
+                },
+            });
+
+            ws.addImage({
+                image: fsread.readFileSync(path.resolve('src/Documents/Images', 'logocompas.png')),
+                name: 'logo', // name is not required param
+                type: 'picture',
+                position: {
+                  type: 'absoluteAnchor',
+                  x: '1.5in',
+                  y: '0.5in',
+                },
+            });
+
+
+            for(var i=1;i<8;i++){
+                if(i==2){
+                    ws.column(i).setWidth(55);
+                }else{
+                    ws.column(i).setWidth(25);
+                }
+            }
+            ws.column(1).setWidth(10);
+            ws.column(3).setWidth(35);
+
+
+            ws.cell(3,3).string(`Archivos ${req.body.estado} SOS/HOE`).style(title);
+
+            ws.cell(6,2).string(`total de Archivos ${req.body.estado}`).style({font:{size:28,color:'#000000',bold:true}});
+            ws.cell(6,4).number(datos.length).style({font:{size:28,color:'#0E648C',bold:true}});
+
+            ws.cell(7,6).string('Fecha de emision del reporte:').style({font:{size:11,color:'#000000',bold:true}});
+            ws.cell(7,7).string(`${req.body.fech}`).style({font:{size:11,color:'#0E648C',bold:true}});
+
+            ws.cell(10,2).string('Ubicacion').style({font:{size:11,color:'#ffffff',bold:true},fill: { type: 'pattern',patternType: 'solid', fgColor: '#000000',}});
+            ws.cell(10,3).string('nombre Del Archivo').style({font:{size:11,color:'#000000',bold:true},fill: { type: 'pattern',patternType: 'solid', fgColor: '#BFBFBF',}});
+            ws.cell(10,4).string('Code').style({font:{size:11,color:'#000000',bold:true},fill: { type: 'pattern',patternType: 'solid', fgColor: '#BFBFBF',}});
+            ws.cell(10,5).string('Fecha Modificacion').style({font:{size:11,color:'#000000',bold:true},fill: { type: 'pattern',patternType: 'solid', fgColor: '#BFBFBF',}});
+            ws.cell(10,6).string('Usuario que modifico').style({font:{size:11,color:'#000000',bold:true},fill: { type: 'pattern',patternType: 'solid', fgColor: '#BFBFBF',}});
+            ws.cell(10,7).string('Estatus de Aprovacion').style({font:{size:11,color:'#000000',bold:true},fill: { type: 'pattern',patternType: 'solid', fgColor: '#BFBFBF',}});
+
+            for(var i=0;i<datos.length;i++){
+                ws.cell(11+i,2).link(`http://localhost:4200/dashboard/libhoe/${datos[i].url.split('/').join('■')}`,datos[i].Ubicacion).style({font:{size:11},color:'#0E648C',underline:false,strike:false,outline:false});;
+                ws.cell(11+i,3).string(datos[i].Nombre).style({font:{size:11}});
+                ws.cell(11+i,4).string(datos[i].codigo).style({font:{size:11}});
+                ws.cell(11+i,5).string(datos[i].Fecha).style({font:{size:11}});
+                ws.cell(11+i,6).number(datos[i].usu).style({font:{size:11}});
+                ws.cell(11+i,7).string(datos[i].esta).style({font:{size:11}});
+            }
+
+
+            wb.write(`src/Documents/Tests/ReportsXLSXList${keypar}.xlsx`);
+
+
+            return res.json({
+                success:true,
+                operation:`http://localhost:4000/tests/ReportsXLSXList${keypar}.xlsx`,
+                operation2:keypar,
+                message:'Return file XLSX_LIST'
+            })
+
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`DownloadXLXSGra`))
+            console.log(e);
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos ==> DownloadXLXSGra`
+            })
+        }
+    },
+
+    DelateIMGXLSX:async (req,res)=>{
+        try{
+            
+            if(req.body.listorno==1){
+                //* Funcion para eliminar reportes listados, en caso de serlos
+                fsGlobal.unlink(`src/Documents/tests/ReportsXLSXList${req.body.clave}.xlsx`,function(err){
+                    if(err){
+                        return res.json({
+                        success: false,
+                        message: `No se pudo haceer tu consulta fallo la base de datos ==> DelateIMGXLSX`
+                        })}
+                });
+            }else{
+                //*function to delete structured reports in the test folder
+                fsGlobal.unlink(`src/Documents/tests/ReportsXLSXGrap${req.body.clave}.xlsx`,function(err){
+                    if(err){
+                        return res.json({
+                        success: false,
+                        message: `No se pudo haceer tu consulta fallo la base de datos ==> DelateIMGXLSX`
+                        })}
+                });
+                //*stunted reports need png image graphics and need to be removed
+                fsGlobal.unlink(`src/Documents/Images/${req.body.clave}.png`,function(err){
+                    if(err){
+                        return res.json({
+                        success: false,
+                        message: `No se pudo haceer tu consulta fallo la base de datos ==> DelateIMGXLSX`
+                        })}
+                });
+            }
+
+            return res.json({
+                success:true,
+                message:'Files Removed'
+            })
+            
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`DelateIMGXLSX`))
+            console.log(e);
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos ==> DelateIMGXLSX`
             })
         }
     }
