@@ -23,6 +23,7 @@ const {
     hello,
     newroute,
     postrename,
+    updatefileVers_Sig,
     postdelate,
     searchsimple,
     orderby,
@@ -96,6 +97,7 @@ router.post('/postfileid',postfileid);
 // router.post('/updatetask',updatetask);
 router.post('/documentosorderby',documentosorderby)
 router.post('/setdocbinary',setdocbinary)
+router.post('/updatefileVers_Sig',updatefileVers_Sig);
 
 router.post('/rejectdoc',rejectdoc)
 router.post('/rejectflujo',rejectflujo)

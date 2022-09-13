@@ -15,11 +15,11 @@ const {
     infoDocumentos
 } = require('./funciones');
 const general={
-
+    //?Estas Funciones Ya no se utilizan    
     hello: async (req,res) =>{
         res.json("hola ")
     }, 
-
+    //?Estas Funciones Ya no se utilizan
     getfiles : async (req,res)=>{
         const fs = require('fs');
         const urls = "http://localhost:4000/uploads/";
@@ -46,7 +46,7 @@ const general={
         res.json(arr)
     })
     },
-
+    //?Estas Funciones Ya no se utilizan
     getfiles2 : async (req,res)=>{
         const fs2 = require('fs');
 
@@ -249,6 +249,38 @@ const general={
                 message: `no se encotro el documento con id = ${iddoc}`
             })
         }
+    },
+
+    updatefileVers_Sig:async (req,res)=>{
+
+        try{
+            const aux = await new sql.Request();
+            const resu = await aux.query(`update Documentos set ID_Version_Sig=${req.body.sig} where ID_DOC=${req.body.iddoc};`)
+            
+            if(!resu){
+                return res.json({
+                    success: false,
+                    operation:resu.rowsAffected,
+                    message: "Mo se completo la operacion"
+                })
+            }
+    
+            return res.json({
+                success: true,
+                operation:resu.rowsAffected,
+                message: "Version siguiente Establecida!!"
+            })
+    
+        }catch(e){
+                console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`rupdatefileVers_Sig`))
+                console.log(e);
+                return res.json({
+                success: false,
+                operation:e,
+                message: `No se pudo haceer tu consulta fallo la base de datos para la operacion ==> updatefileVers_Sig`
+                })
+        }
+
     },
 
     postrute: async (req,res)=>{
@@ -571,7 +603,6 @@ const general={
         }
     },
 
-
     deletegroupsf:async (req,res)=>{
 
         try{
@@ -739,7 +770,7 @@ const general={
         var est = old;
 
         est = est.split('§',1);
-        console.log(est);
+
 
         if(old.indexOf('.')>-1){
             old = old.split('.',1).toString()
@@ -755,12 +786,12 @@ const general={
         if(ext==""){
             fs.rename(`./uploads/${rut}${id+'§'+old}${ext}`, `./uploads/${rut}${id+'§'+name}${ext}`, (err) => {
                 if (err) throw err;
-                console.log('renamed complete');
+                
             });
         }else{
-            fs.rename(`./uploads/${rut}${id+'Â§'+old}${ext}`, `./uploads/${rut}${id+'Â§'+est+'§'+name}${ext}`, (err) => {
+            fs.rename(`./uploads/${rut}${id+'Â§'+old}${ext}`, `./uploads/${rut}${id+'Â§'+name}${ext}`, (err) => {
                 if (err) throw err;
-                console.log('renamed complete');
+                
             });
         }
 
@@ -1133,7 +1164,6 @@ const general={
 
     updatepropi:async (req,res)=>{
         try{
-            console.log(req.body)
             const aux = await new sql.Request();
             const resu = await aux.query(`update Documentos set Nombre='${req.body.name}', ID_Revisor1=${req.body.rev1},ID_Revisor2=${req.body.rev2},ID_Revisor3=${req.body.rev3}, Document_Type_Hoe='${req.body.secu}',No_Rev='${req.body.nore}',HOE_Code='${req.body.hoec}', Fecha_Modificacion=(CURRENT_TIMESTAMP) ,ID_UserModifico='${req.body.idcont}' where ID_DOC=${req.body.id}`)
             
@@ -1315,6 +1345,7 @@ const general={
                 })
         }
     },
+
     // updatetask:async (req,res)=>{
     //     console.log(req.body)
     //     try{
@@ -1459,8 +1490,7 @@ const general={
             }
         }
 
-        console.log(arr);
-        
+
         return res.json({
             success: true,
             operation:arr,
@@ -1478,6 +1508,7 @@ const general={
         }
 
     },
+
     documentosorderby:async(req,res)=>{
 
         try{
@@ -1589,6 +1620,7 @@ const general={
         }
 
     },
+    
     setdocbinary:async(req,res)=>{
         
         const fs = require('fs')
@@ -1599,7 +1631,6 @@ const general={
             if(err) {
                 return console.error(err);
             }
-            console.log("File saved successfully!");
         });
 
         const aux = await new sql.Request();

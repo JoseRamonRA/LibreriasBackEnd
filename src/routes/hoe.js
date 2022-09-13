@@ -42,7 +42,6 @@ router.post("/subirDocumento",subir.single("archivoHOE"), async (req, res) => {
 });
 router.post("/carga/:idUser", async (req, res) => {
     try {
-        console.log("Nadsnackjdnckajndkj");
          let documento = await new crearDocumento(
              req.params.idUser,req.body.nombre,
              req.body.extension, req.body.norehoe,
