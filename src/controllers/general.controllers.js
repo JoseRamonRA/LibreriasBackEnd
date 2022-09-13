@@ -1363,6 +1363,17 @@ const general={
         var data=[];
         var arr=[];
 
+        async function getTaskStatusOfUser(userId, docId){
+            try{
+                if(userId == 0) return{userId: userId, status: 5}
+                const aux = await new sql.Request();
+                var resu = await aux.query(`select Estatus from Tareas where ID_Doc = ${docId} and ID_User_Asignado = ${userId};`);
+                return {
+                    userId: userId,
+                    status: resu.recordset[0].Estatus
+                }
+            }catch(e){}
+        }
         function scanDirs(directoryPath){
         try{
             var ls=fs.readdirSync(directoryPath);
@@ -1409,7 +1420,7 @@ const general={
             this.ID_Revisor3 = rev3;
             this.ID_UserModifico = modifica;
             this.Estatus = estatus;
-            this.ID_User_Asignado = ID_User_Asignado;
+            //this.ID_User_Asignado = ID_User_Asignado;
         }
 
         scanDirs('./uploads');
@@ -1422,11 +1433,34 @@ const general={
                 var ruta = data[j].path.split('\\')
                 ruta = ruta.join('/')
                 if(archivoHOE[i].ID_DOC== comp){
-                    var ne = new document(archivoHOE[i].ID_DOC,archivoHOE[i].ID_Contribuidor,archivoHOE[i].Nombre, archivoHOE[i].Extension,ruta,data[j].isDirectory,archivoHOE[i].HOE_Code,archivoHOE[i].Document_Type_Hoe,"calidad","press",archivoHOE[i].No_Rev,"Ingles","2022-05-05",2,archivoHOE[i].Fecha_Modificacion,archivoHOE[i].ID_Revisor1,archivoHOE[i].ID_Revisor2,archivoHOE[i].ID_Revisor3,archivoHOE[i].ID_UserModifico,archivoHOE[i].Estatus,archivoHOE[i].ID_User_Asignado);
+                    var ne = new document(
+                        archivoHOE[i].ID_DOC,
+                        archivoHOE[i].ID_Contribuidor,
+                        archivoHOE[i].Nombre, 
+                        archivoHOE[i].Extension,
+                        ruta,
+                        data[j].isDirectory,
+                        archivoHOE[i].HOE_Code,
+                        archivoHOE[i].Document_Type_Hoe,
+                        "calidad",
+                        "press",
+                        archivoHOE[i].No_Rev,
+                        "Ingles",
+                        "2022-05-05",
+                        2,
+                        archivoHOE[i].Fecha_Modificacion,
+                        await getTaskStatusOfUser(archivoHOE[i].ID_Revisor1, archivoHOE[i].ID_DOC),
+                        await getTaskStatusOfUser(archivoHOE[i].ID_Revisor2, archivoHOE[i].ID_DOC),
+                        await getTaskStatusOfUser(archivoHOE[i].ID_Revisor3, archivoHOE[i].ID_DOC),
+                        archivoHOE[i].ID_UserModifico,
+                        archivoHOE[i].Estatus/*,archivoHOE[i].ID_User_Asignado*/);
                     arr.push(ne);break;
                 }
             }
         }
+
+        console.log(arr);
+        
         return res.json({
             success: true,
             operation:arr,
