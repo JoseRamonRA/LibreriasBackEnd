@@ -15,14 +15,14 @@ app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 
 
-
-
 //Routes
 // app.use(studentsroutes)
 
 app.use(require('./routes'))
 
 app.use('/uploads', express.static(path.resolve('uploads')));
+app.use('/Documents', express.static(path.resolve('src/Documents')));
+app.use('/Tests',express.static(path.resolve('src/Documents/Tests')))
 
 
 export default app;

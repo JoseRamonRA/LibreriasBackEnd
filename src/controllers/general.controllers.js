@@ -2,6 +2,13 @@ const chalk = require('chalk');
 
 const path = require ('path');
 
+const fsread = require('fs')
+
+const fsGlobal = require('fs');
+
+
+
+import e from 'cors';
 import sql from '../Connection/conexion';
 
 const { 
@@ -379,8 +386,21 @@ const general={
 
     createcarpet:async (req,res)=>{
         try{
+            const fs = require('fs');
+            var rutas = req.body.rute;
+
+            console.log(rutas);
+
             const aux = await new sql.Request(); 
-            const resu = await aux.query(`insert into Carpeta (Nombre,ID_Carpeta_Superior) values ('${req.body.name}',${req.body.carsup})`);
+            const resu = await aux.query(`EXEC Devolvedidcarp '${req.body.name}',${req.body.carsup}`);
+
+            var IDC = resu.recordset[0];
+
+            if(rutas!=''){
+                fs.mkdirSync(`./uploads/${rutas}/${IDC.LAST_ID}§${req.body.name}`,{recursive:true});
+            }else{
+                fs.mkdirSync(`./uploads/${IDC.LAST_ID}§${req.body.name}`,{recursive:true});
+            }
 
             if(!resu){
                 return res.json({
@@ -398,7 +418,7 @@ const general={
 
         }catch(e){
             console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`createcarpet`))
-    
+            console.log(e);
             return res.json({
             success: false,
             operation:e,
@@ -689,6 +709,7 @@ const general={
     newroute:async (req,res)=>{
         try{
             var rutas = req.body.ruta;
+            
             const fs = require('fs');
             console.log(rutas)
             fs.mkdirSync(`./uploads/${rutas}`,{recursive:true});
@@ -1327,11 +1348,11 @@ const general={
         try{
             const aux = await new sql.Request();
             switch(req.body.role){
-                case 'admin':var resu = await aux.query(`select * from DocsComplete Where Estatus!=4 order by ${req.body.colum} ${req.body.order};`);break;
-                case 'revisor':var resu = await aux.query(`select * from DocsComplete where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser} or Estatus=1) order by ${req.body.colum} ${req.body.order};`);break;
-                case 'contribuidor':var resu = await aux.query(`select * from DocsComplete where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser} or Estatus=1) order by ${req.body.colum} ${req.body.order};`);break;
-                case 'visitante':var resu = await aux.query(`select * from DocsComplete Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
-                default:var resu = await aux.query(`select * from DocsComplete Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
+                case 'admin':var resu = await aux.query(`select * from DocsNotBinary Where Estatus!=4 order by ${req.body.colum} ${req.body.order};`);break;
+                case 'revisor':var resu = await aux.query(`select * from DocsNotBinary where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser} or Estatus=1) order by ${req.body.colum} ${req.body.order};`);break;
+                case 'contribuidor':var resu = await aux.query(`select * from DocsNotBinary where Estatus!=4 and (ID_Contribuidor=${req.body.iduser} or ID_Revisor1=${req.body.iduser} or ID_Revisor2=${req.body.iduser} or ID_Revisor3=${req.body.iduser} or Estatus=1) order by ${req.body.colum} ${req.body.order};`);break;
+                case 'visitante':var resu = await aux.query(`select * from DocsNotBinary Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
+                default:var resu = await aux.query(`select * from DocsNotBinary Where Estatus=1 order by ${req.body.colum} ${req.body.order};`);break;
             }
             
         var archivoHOE= resu.recordset;
@@ -1342,6 +1363,17 @@ const general={
         var data=[];
         var arr=[];
 
+        async function getTaskStatusOfUser(userId, docId){
+            try{
+                if(userId == 0) return{userId: userId, status: 5}
+                const aux = await new sql.Request();
+                var resu = await aux.query(`select Estatus from Tareas where ID_Doc = ${docId} and ID_User_Asignado = ${userId};`);
+                return {
+                    userId: userId,
+                    status: resu.recordset[0].Estatus
+                }
+            }catch(e){}
+        }
         function scanDirs(directoryPath){
         try{
             var ls=fs.readdirSync(directoryPath);
@@ -1388,7 +1420,7 @@ const general={
             this.ID_Revisor3 = rev3;
             this.ID_UserModifico = modifica;
             this.Estatus = estatus;
-            this.ID_User_Asignado = ID_User_Asignado;
+            //this.ID_User_Asignado = ID_User_Asignado;
         }
 
         scanDirs('./uploads');
@@ -1401,11 +1433,34 @@ const general={
                 var ruta = data[j].path.split('\\')
                 ruta = ruta.join('/')
                 if(archivoHOE[i].ID_DOC== comp){
-                    var ne = new document(archivoHOE[i].ID_DOC,archivoHOE[i].ID_Contribuidor,archivoHOE[i].Nombre, archivoHOE[i].Extension,ruta,data[j].isDirectory,archivoHOE[i].HOE_Code,archivoHOE[i].Document_Type_Hoe,"calidad","press",archivoHOE[i].No_Rev,"Ingles","2022-05-05",2,archivoHOE[i].Fecha_Modificacion,archivoHOE[i].ID_Revisor1,archivoHOE[i].ID_Revisor2,archivoHOE[i].ID_Revisor3,archivoHOE[i].ID_UserModifico,archivoHOE[i].Estatus,archivoHOE[i].ID_User_Asignado);
+                    var ne = new document(
+                        archivoHOE[i].ID_DOC,
+                        archivoHOE[i].ID_Contribuidor,
+                        archivoHOE[i].Nombre, 
+                        archivoHOE[i].Extension,
+                        ruta,
+                        data[j].isDirectory,
+                        archivoHOE[i].HOE_Code,
+                        archivoHOE[i].Document_Type_Hoe,
+                        "calidad",
+                        "press",
+                        archivoHOE[i].No_Rev,
+                        "Ingles",
+                        "2022-05-05",
+                        2,
+                        archivoHOE[i].Fecha_Modificacion,
+                        await getTaskStatusOfUser(archivoHOE[i].ID_Revisor1, archivoHOE[i].ID_DOC),
+                        await getTaskStatusOfUser(archivoHOE[i].ID_Revisor2, archivoHOE[i].ID_DOC),
+                        await getTaskStatusOfUser(archivoHOE[i].ID_Revisor3, archivoHOE[i].ID_DOC),
+                        archivoHOE[i].ID_UserModifico,
+                        archivoHOE[i].Estatus/*,archivoHOE[i].ID_User_Asignado*/);
                     arr.push(ne);break;
                 }
             }
         }
+
+        console.log(arr);
+        
         return res.json({
             success: true,
             operation:arr,
@@ -1496,7 +1551,7 @@ const general={
             }
         }
 
-        var carpetas = await aux.query(`select * from Carpeta order by ID_C desc;`);
+        var carpetas = await aux.query(`select * from Carpeta order by ID_C ${req.body.order};`);
         var car= carpetas.recordset;
 
         for(var i=0;i<car.length;i++){
@@ -1765,7 +1820,14 @@ const general={
             const fs = require('fs');
 
             const aux = await new sql.Request();
-            const resu = await aux.query(`select * from DocsNotBinary where Estatus=${req.body.esta};`);  
+
+            if(req.body.esta!=4){
+                var resu = await aux.query(`select * from DocsNotBinary where Estatus=${req.body.esta};`);  
+            }else{
+                var resu = await aux.query(`select * from DocsNotBinary order by Estatus`);  
+            }
+
+            
 
             var archivoHOE= resu.recordset;
             var data=[];
@@ -1904,11 +1966,594 @@ const general={
             operation:e,
             message: `No se pudo haceer tu consulta fallo la base de datos ==> reportsgrafics`
             })
-        }
+        }   
+    },
+
+    // downxlsxgrafic:async(req,res)=>{
+
+    //     const XlsxPopulate = require('xlsx-populate');
+    //     try{
+    //     // Load a new blank workbook
+    //     XlsxPopulate.fromBlankAsync()
+    //     .then(workbook => {
+    //         // Modify the workbook.
+    //         const totalColumns = req.body.tabled[0].length;
+    //         const sheet1 = workbook.sheet(0).name(`Archivos_${req.body.estado}_SOS_HOE`);
+    //         const num = req.body.tabled.length-1;
+
+    //         // sheet1.column("E").width(25).hidden(false);
+    //         sheet1.cell("C3").value(`Archivos ${req.body.estado} SOS/HOE`).style({"fontSize":34,bold:true});
+    //         sheet1.cell("B7").value(`Total de Archivos ${req.body.estado}:`).style("fontSize",28);
+    //         sheet1.cell("D7").value(num).style({bold:true,textDirection:"left",fontColor: "0e648c",fontSize:28});
+    //         sheet1.cell("F8").value(`Fecha de emision del reporte:`).style("bold",true);
+    //         sheet1.cell("G8").value(`${req.body.fech}`).style({bold:true,textDirection:"left",fontColor: "0e648c"});
+    //         sheet1.cell("B10").value(req.body.tabled).style({fill:'ffffff'});
+
+    //         const endColumn = String.fromCharCode(65 + totalColumns);
+    //         sheet1.row(10).style("bold", true);
+    //         sheet1.range("B10:" + endColumn + "10").style("fill", "BFBFBF");
             
+    //         for(var i=0;i<totalColumns;i++){
+    //             var col = String.fromCharCode(64 + (i+2));
+    //             if(i==0){
+    //                 sheet1.column(`${col}`).width(55).hidden(false);
+    //                 sheet1.cell(`${col}10`).style("fill", "000000");
+    //                 sheet1.cell(`${col}10`).style("fontColor", "ffffff");
+    //             }else{
+    //                 sheet1.column(`${col}`).width(35).hidden(false);
+    //             }
+                
+    //         }
+    //         // Write to file.
+    //         return workbook.toFileAsync("src/Documents/filegenerala.xlsx");
 
 
+    //     });
+ 
+
+    //     return res.json({
+    //         success: false,
+    //         operation:`http://localhost:4000/Documents/filegenerala.xlsx`,
+    //         message: `Return file XLSX`
+    //         })
+    //     }catch(e){
+    //         console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`downxlsxgrafic`))
+    //         console.log(e);
+    //         return res.json({
+    //         success: false,
+    //         operation:e,
+    //         message: `No se pudo haceer tu consulta fallo la base de datos ==> downxlsxgrafic`
+    //         })
+    //     } 
         
+    // },
+
+    // DownloadXLSX:async(req,res)=>{
+
+    //     const XlsxPopulate = require('xlsx-populate');
+    //     try{
+
+    //         console.log(req.body);
+
+
+
+    //     // Load a new blank workbook
+    //     XlsxPopulate.fromBlankAsync()
+    //     .then(workbook => {
+    //         // Modify the workbook.
+
+    //         const folders = req.body.tabled;
+
+    //         const sheet1 = workbook.sheet(0).name(`Archivos_${req.body.estado}_SOS_HOE`);
+    //         const num = req.body.tabled.length-1;
+
+
+    //         const endColumn = String.fromCharCode(69);
+    //         console.log('*********************');
+    //         console.log(endColumn);
+    //         const endColumn2 = String.fromCharCode(67);
+    //         console.log('*********************');
+    //         console.log(endColumn2);
+
+    //         sheet1.cell("C4").value(`Archivos ${req.body.estado} SOS/HOE`).style({"fontSize":30,bold:true,textDirection:"Center"});
+    //         sheet1.range("C4:" + endColumn2 + "4").style("fill", "0E648C");
+
+    //         sheet1.cell("D7").value(`Total de Documentos ${req.body.estado} por Planta`).style({"fontSize":22,bold:true,textDirection:"Center"});
+    //         sheet1.range("D7:" + endColumn2 + "7").style("fill", "0E648C");sheet1.range("D8:" + endColumn2 + "8").style("fill", "0E648C");
+            
+    //         sheet1.cell("D7").value(`Total de Documentos ${req.body.estado} por Planta`).style({"fontSize":22,bold:true,textDirection:"Center"});
+
+    //         for(var i=0;i<folders.length;i++){
+    //             console.log(folders[i]);
+                
+    //         }
+
+
+    //         // Write to file.
+    //         return workbook.toFileAsync("src/Documents/filegrafics.xlsx");
+
+
+    //     });
+ 
+
+    //     return res.json({
+    //         success: false,
+    //         operation:`http://localhost:4000/Documents/filegrafics.xlsx`,
+    //         message: `Return file XLSX_GRAFICS`
+    //         })
+    //     }catch(e){
+    //         console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`DownloadXLSX`))
+    //         console.log(e);
+    //         return res.json({
+    //         success: false,
+    //         operation:e,
+    //         message: `No se pudo haceer tu consulta fallo la base de datos ==> DownloadXLSX`
+    //         })
+    //     } 
+        
+    // }
+
+    DownloadXLXSGra: async (req,res)=>{
+
+        const datos = req.body.tabled;
+
+        const keypar = req.body.clave;
+
+        try{
+            //* Require library
+            var xl = require('excel4node');
+
+            // Create a new instance of a Workbook class
+            var wb = new xl.Workbook();
+
+            var options = {
+                
+                sheetView: {
+                    showGridLines: false, // Flag indicating whether the sheet should have gridlines enabled or disabled during view
+                },
+              };
+
+            // Add Worksheets to the workbook
+            var ws = wb.addWorksheet(`${req.body.estado}_SOSHOE`,options);
+
+            //? Styles Columns
+            const title = wb.createStyle({
+                font: {
+                  color: '#000000',
+                  size: 48,
+                  bold:true,
+                }
+            });
+
+            var tittle2 = wb.createStyle({
+                font: {
+                  color: '#ffffff',
+                  size: 18,
+                  bold:true,
+                },
+                fill: { 
+                    type: 'pattern', // the only one implemented so far.
+                    patternType: 'solid', // most common.
+                    fgColor: '#0E648C', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                    // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                },
+                alignment: { // §18.8.1
+                    horizontal: 'center',
+                },
+            });
+
+            var backblue =wb.createStyle({
+                fill: { 
+                    type: 'pattern', // the only one implemented so far.
+                    patternType: 'solid', // most common.
+                    fgColor: '#0E648C', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                    // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                }
+            });
+
+            var backgray =wb.createStyle({
+                fill: { 
+                    type: 'pattern', // the only one implemented so far.
+                    patternType: 'solid', // most common.
+                    fgColor: '#BFBFBF', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                    // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                }
+            });
+
+            var titlegray=wb.createStyle({
+                font: {
+                    color: '#000000',
+                    size: 18,
+                    bold:true,
+                  },
+                  fill: { 
+                      type: 'pattern', // the only one implemented so far.
+                      patternType: 'solid', // most common.
+                      fgColor: '#BFBFBF', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                      // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                  },
+                  alignment: { // §18.8.1
+                      horizontal: 'center',
+                  },
+            });
+
+            var subtitlegray=wb.createStyle({
+                font: {
+                    color: '#000000',
+                    size: 12,
+                    bold:true,
+                  },
+                  fill: { 
+                      type: 'pattern', // the only one implemented so far.
+                      patternType: 'solid', // most common.
+                      fgColor: '#BFBFBF', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                      // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                  },
+                  alignment: { // §18.8.1
+                      horizontal: 'left',
+                  },
+            });
+
+            var bordergray = wb.createStyle({
+                border: { // §18.8.4 border (Border)
+                    left: {
+                        style: 'thin', //§18.18.3 ST_BorderStyle (Border Line Styles) ['none', 'thin', 'medium', 'dashed', 'dotted', 'thick', 'double', 'hair', 'mediumDashed', 'dashDot', 'mediumDashDot', 'dashDotDot', 'mediumDashDotDot', 'slantDashDot']
+                        color: '#BFBFBF' // HTML style hex value
+                    },
+                    right: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    top: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    bottom: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    diagonal: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    
+                },
+            });
+
+            ws.addImage({
+                image: fsread.readFileSync(path.resolve('src/Documents/Images', 'logocompas.png')),
+                name: 'logo', // name is not required param
+                type: 'picture',
+                position: {
+                  type: 'absoluteAnchor',
+                  x: '2in',
+                  y: '0.5in',
+                },
+            });
+
+            ws.addImage({
+                image: fsread.readFileSync(path.resolve('src/Documents/Images', `${keypar}.png`)),
+                name: 'logo', // name is not required param
+                type: 'picture',
+                position: {
+                    type: 'twoCellAnchor',
+                    from: {
+                      col: 10,
+                      colOff: 0,
+                      row: 6,
+                      rowOff: 0,
+                    },
+                    to: {
+                      col: 15,
+                      colOff: 0,
+                      row: 26,
+                      rowOff: 0,
+                    },
+                },
+            });
+
+            
+            ws.column(4).setWidth(20);
+
+            ws.cell(3,7).string(`Documentos ${req.body.estado} Por Carpeta`).style(title);
+            ws.cell(7,2,8,6).style(backblue)
+            ws.cell(7,4).string(`Total de documentos ${req.body.estado} por planta`).style(tittle2)
+            ws.cell(10,2,10,6).style(backgray);
+            ws.cell(10,4).string('Total Raiz SOS/HOE').style(titlegray)
+            ws.cell(11,4).number(0).style({font: {color: '#000000',size: 12,bold:true,},alignment: { horizontal: 'center',}})
+            ws.cell(11,2,11,6).style({border:{bottom:{style:'thick',color:'#BFBFBF'}}})
+            
+            var salt=0;
+            var totaldocs=0;
+
+            for(var i=0;i<datos.length;i++){
+                if(i%2==0){
+                    ws.cell(14+salt,2,14+salt,3).style({border:{bottom:{style:'thick',color:'#BFBFBF'}}})
+                    ws.cell(13+salt,3).style(backgray);
+                    ws.cell(13+salt,2).string(`TOTAL ${datos[i].ID_C}. ${datos[i].Nombre}`).style(subtitlegray);
+                    ws.cell(14+salt,2).number(datos[i].Arch_T).style({font: {color: '#000000',size: 12,bold:true,},alignment: { horizontal: 'right',},})
+                    totaldocs+=datos[i].Arch_T;
+                }else{
+                    ws.cell(14+salt,5,14+salt,6).style({border:{bottom:{style:'thick',color:'#BFBFBF'}}})
+                    ws.cell(13+salt,6).style(backgray);
+                    ws.cell(13+salt,5).string(`TOTAL ${datos[i].ID_C}. ${datos[i].Nombre}`).style(subtitlegray);
+                    ws.cell(14+salt,5).number(datos[i].Arch_T).style({font: {color: '#000000',size: 12,bold:true,},alignment: { horizontal: 'right',},})
+                    totaldocs+=datos[i].Arch_T;
+                    salt+=4;
+                }
+            }
+
+            ws.cell(13+salt+2,2,13+salt+2,6).style(backblue)
+            ws.cell(13+salt+2,4).string('TOTAL GENERAL').style(tittle2)
+            ws.cell(13+salt+3,4).number(totaldocs).style({font: {color: '#000000',size: 12,bold:true,},alignment: { horizontal: 'center',},})
+            ws.cell(14+salt+2,2,14+salt+2,6).style({border:{bottom:{style:'thick',color:'#BFBFBF'}}})
+
+            ws.cell(26,10).string('Fecha de emision del reporte:').style({font: {color: '#000000',size: 12,bold:true,},alignment: { horizontal: 'left',}})
+            ws.cell(26,13).string(`${req.body.fech}`).style({font: {color: '#0E648C',size: 12,bold:true,},alignment: { horizontal: 'left',}})
+
+            wb.write(`src/Documents/Tests/ReportsXLSXGrap${keypar}.xlsx`);
+
+
+            return res.json({
+                success:true,
+                operation:`http://localhost:4000/tests/ReportsXLSXGrap${keypar}.xlsx`,
+                operation2:keypar,
+                message:'Return file XLSX_GRAFICS'
+            })
+
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`DownloadXLXSGra`))
+            console.log(e);
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos ==> DownloadXLXSGra`
+            })
+        }
+    },
+    
+    DownloadXLXSList: async (req,res)=>{
+
+        const datos = req.body.tabled;
+
+        const keypar = req.body.clave;
+
+        try{
+            //* Require library
+            var xl = require('excel4node');
+
+            // Create a new instance of a Workbook class
+            var wb = new xl.Workbook();
+
+            var options = {
+                
+                sheetView: {
+                    showGridLines: false, 
+                  // Flag indicating whether the sheet should have gridlines enabled or disabled during view
+                },
+              };
+
+            // Add Worksheets to the workbook
+            var ws = wb.addWorksheet(`${req.body.estado}_SOSHOE`,options);
+
+            //? Styles Columns
+            const title = wb.createStyle({
+                font: {
+                  color: '#000000',
+                  size: 48,
+                  bold:true,
+                }
+            });
+
+            var tittle2 = wb.createStyle({
+                font: {
+                  color: '#ffffff',
+                  size: 18,
+                  bold:true,
+                },
+                fill: { 
+                    type: 'pattern', // the only one implemented so far.
+                    patternType: 'solid', // most common.
+                    fgColor: '#0E648C', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                    // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                },
+                alignment: { // §18.8.1
+                    horizontal: 'center',
+                },
+            });
+
+            var backblue =wb.createStyle({
+                fill: { 
+                    type: 'pattern', // the only one implemented so far.
+                    patternType: 'solid', // most common.
+                    fgColor: '#0E648C', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                    // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                }
+            });
+
+            var backgray =wb.createStyle({
+                fill: { 
+                    type: 'pattern', // the only one implemented so far.
+                    patternType: 'solid', // most common.
+                    fgColor: '#BFBFBF', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                    // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                }
+            });
+
+            var titlegray=wb.createStyle({
+                font: {
+                    color: '#000000',
+                    size: 18,
+                    bold:true,
+                  },
+                  fill: { 
+                      type: 'pattern', // the only one implemented so far.
+                      patternType: 'solid', // most common.
+                      fgColor: '#BFBFBF', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                      // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                  },
+                  alignment: { // §18.8.1
+                      horizontal: 'center',
+                  },
+            });
+
+            var subtitlegray=wb.createStyle({
+                font: {
+                    color: '#000000',
+                    size: 12,
+                    bold:true,
+                  },
+                  fill: { 
+                      type: 'pattern', // the only one implemented so far.
+                      patternType: 'solid', // most common.
+                      fgColor: '#BFBFBF', // you can add two extra characters to serve as alpha, i.e. '2172d7aa'.
+                      // bgColor: 'ffffff' // bgColor only applies on patternTypes other than solid.// HTML style hex value. defaults to black
+                  },
+                  alignment: { // §18.8.1
+                      horizontal: 'left',
+                  },
+            });
+
+            var bordergray = wb.createStyle({
+                border: { // §18.8.4 border (Border)
+                    left: {
+                        style: 'thin', //§18.18.3 ST_BorderStyle (Border Line Styles) ['none', 'thin', 'medium', 'dashed', 'dotted', 'thick', 'double', 'hair', 'mediumDashed', 'dashDot', 'mediumDashDot', 'dashDotDot', 'mediumDashDotDot', 'slantDashDot']
+                        color: '#BFBFBF' // HTML style hex value
+                    },
+                    right: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    top: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    bottom: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    diagonal: {
+                        style: 'thin',
+                        color: '#BFBFBF'
+                    },
+                    
+                },
+            });
+
+            ws.addImage({
+                image: fsread.readFileSync(path.resolve('src/Documents/Images', 'logocompas.png')),
+                name: 'logo', // name is not required param
+                type: 'picture',
+                position: {
+                  type: 'absoluteAnchor',
+                  x: '1.5in',
+                  y: '0.5in',
+                },
+            });
+
+
+            for(var i=1;i<8;i++){
+                if(i==2){
+                    ws.column(i).setWidth(55);
+                }else{
+                    ws.column(i).setWidth(25);
+                }
+            }
+            ws.column(1).setWidth(10);
+            ws.column(3).setWidth(35);
+
+
+            ws.cell(3,3).string(`Archivos ${req.body.estado} SOS/HOE`).style(title);
+
+            ws.cell(6,2).string(`total de Archivos ${req.body.estado}`).style({font:{size:28,color:'#000000',bold:true}});
+            ws.cell(6,4).number(datos.length).style({font:{size:28,color:'#0E648C',bold:true}});
+
+            ws.cell(7,6).string('Fecha de emision del reporte:').style({font:{size:11,color:'#000000',bold:true}});
+            ws.cell(7,7).string(`${req.body.fech}`).style({font:{size:11,color:'#0E648C',bold:true}});
+
+            ws.cell(10,2).string('Ubicacion').style({font:{size:11,color:'#ffffff',bold:true},fill: { type: 'pattern',patternType: 'solid', fgColor: '#000000',}});
+            ws.cell(10,3).string('nombre Del Archivo').style({font:{size:11,color:'#000000',bold:true},fill: { type: 'pattern',patternType: 'solid', fgColor: '#BFBFBF',}});
+            ws.cell(10,4).string('Code').style({font:{size:11,color:'#000000',bold:true},fill: { type: 'pattern',patternType: 'solid', fgColor: '#BFBFBF',}});
+            ws.cell(10,5).string('Fecha Modificacion').style({font:{size:11,color:'#000000',bold:true},fill: { type: 'pattern',patternType: 'solid', fgColor: '#BFBFBF',}});
+            ws.cell(10,6).string('Usuario que modifico').style({font:{size:11,color:'#000000',bold:true},fill: { type: 'pattern',patternType: 'solid', fgColor: '#BFBFBF',}});
+            ws.cell(10,7).string('Estatus de Aprovacion').style({font:{size:11,color:'#000000',bold:true},fill: { type: 'pattern',patternType: 'solid', fgColor: '#BFBFBF',}});
+
+            for(var i=0;i<datos.length;i++){
+                ws.cell(11+i,2).link(`http://localhost:4200/dashboard/libhoe/${datos[i].url.split('/').join('■')}`,datos[i].Ubicacion).style({font:{size:11},color:'#0E648C',underline:false,strike:false,outline:false});;
+                ws.cell(11+i,3).string(datos[i].Nombre).style({font:{size:11}});
+                ws.cell(11+i,4).string(datos[i].codigo).style({font:{size:11}});
+                ws.cell(11+i,5).string(datos[i].Fecha).style({font:{size:11}});
+                ws.cell(11+i,6).number(datos[i].usu).style({font:{size:11}});
+                ws.cell(11+i,7).string(datos[i].esta).style({font:{size:11}});
+            }
+
+
+            wb.write(`src/Documents/Tests/ReportsXLSXList${keypar}.xlsx`);
+
+
+            return res.json({
+                success:true,
+                operation:`http://localhost:4000/tests/ReportsXLSXList${keypar}.xlsx`,
+                operation2:keypar,
+                message:'Return file XLSX_LIST'
+            })
+
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`DownloadXLXSGra`))
+            console.log(e);
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos ==> DownloadXLXSGra`
+            })
+        }
+    },
+
+    DelateIMGXLSX:async (req,res)=>{
+        try{
+            
+            if(req.body.listorno==1){
+                //* Funcion para eliminar reportes listados, en caso de serlos
+                fsGlobal.unlink(`src/Documents/tests/ReportsXLSXList${req.body.clave}.xlsx`,function(err){
+                    if(err){
+                        return res.json({
+                        success: false,
+                        message: `No se pudo haceer tu consulta fallo la base de datos ==> DelateIMGXLSX`
+                        })}
+                });
+            }else{
+                //*function to delete structured reports in the test folder
+                fsGlobal.unlink(`src/Documents/tests/ReportsXLSXGrap${req.body.clave}.xlsx`,function(err){
+                    if(err){
+                        return res.json({
+                        success: false,
+                        message: `No se pudo haceer tu consulta fallo la base de datos ==> DelateIMGXLSX`
+                        })}
+                });
+                //*stunted reports need png image graphics and need to be removed
+                fsGlobal.unlink(`src/Documents/Images/${req.body.clave}.png`,function(err){
+                    if(err){
+                        return res.json({
+                        success: false,
+                        message: `No se pudo haceer tu consulta fallo la base de datos ==> DelateIMGXLSX`
+                        })}
+                });
+            }
+
+            return res.json({
+                success:true,
+                message:'Files Removed'
+            })
+            
+        }catch(e){
+            console.log(chalk.red(`Existe error en la base de datos o no se completo la operacion`),chalk.bgHex("#000").hex("#00EBAE").bold(`DelateIMGXLSX`))
+            console.log(e);
+            return res.json({
+            success: false,
+            operation:e,
+            message: `No se pudo haceer tu consulta fallo la base de datos ==> DelateIMGXLSX`
+            })
+        }
     }
 
 

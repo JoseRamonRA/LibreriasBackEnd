@@ -14,7 +14,8 @@ const {
     rechazarFlujo,
     aprobacionDoc,
     rechazarDoc,
-    infoDocumento
+    infoDocumento,
+    actualizarSiguienteTarea
 } = require('../controllers/funciones');
 const storage = multer.diskStorage({
     filename: function (res, file, cb) {
@@ -41,6 +42,7 @@ router.post("/subirDocumento",subir.single("archivoHOE"), async (req, res) => {
 });
 router.post("/carga/:idUser", async (req, res) => {
     try {
+        console.log("Nadsnackjdnckajndkj");
          let documento = await new crearDocumento(
              req.params.idUser,req.body.nombre,
              req.body.extension, req.body.norehoe,
@@ -57,6 +59,20 @@ router.post("/carga/:idUser", async (req, res) => {
             documento.recordset[0].ID_DOC,flujo.recordset[0].ID_F,
             req.body.reviehoe1,new Date(),'Se le ha asignado la tarea de revisión del documento: '+req.body.nombre+'',1
          );
+
+         if(req.body.reviehoe2 != 0){
+            let tarea = await new crearTarea(
+                documento.recordset[0].ID_DOC,flujo.recordset[0].ID_F,
+                req.body.reviehoe2,new Date(),'Se le ha asignado la tarea de revisión del documento: '+req.body.nombre+'',2
+             );
+         }
+         
+         if(req.body.reviehoe3 != 0){
+            let tarea = await new crearTarea(
+                documento.recordset[0].ID_DOC,flujo.recordset[0].ID_F,
+                req.body.reviehoe3,new Date(),'Se le ha asignado la tarea de revisión del documento: '+req.body.nombre+'',2
+             );
+         }
 
          res.json({
             mensaje:"Insercion exitosa",
@@ -124,17 +140,29 @@ router.post("/aprobar/:idUser/:iddoc/:idflujo/:idtarea", async (req, res) => {
         
         if(info.recordset[0].Estatus_Seguimiento == 1 && info.recordset[0].ID_Revisor2 != 0){
             aprobar = await new aprobacionDoc(
-                req.params.iddoc,2,2,req.params.idUser,new Date()
+                req.params.iddoc,
+                2,
+                2,
+                req.params.idUser,
+                new Date()
             );
            
             terminarTarea = await new aprobacionTarea(
-                req.params.idtarea,new Date(),2,'Terminada'
+                req.params.idtarea,new Date(),3,'Terminada'
             );
           
-            crearTareaN = await new crearTarea(
-                req.params.iddoc,req.params.idflujo,
-                info.recordset[0].ID_Revisor2,new Date(),'Se le ha asignado la tarea de revisión del documento: '+info.recordset[0].Nombre+'',1
-             );
+
+            crearTareaN = await new actualizarSiguienteTarea(
+                req.params.iddoc,
+                req.params.idflujo,
+                info.recordset[0].ID_Revisor2,
+                1
+            );
+
+            // crearTareaN = await new crearTarea(
+            //     req.params.iddoc,req.params.idflujo,
+            //     info.recordset[0].ID_Revisor2,new Date(),'Se le ha asignado la tarea de revisión del documento: '+info.recordset[0].Nombre+'',1
+            //  );
             
         }else if(info.recordset[0].Estatus_Seguimiento == 2 && info.recordset[0].ID_Revisor3 != 0){
          //Para el tercer revisor 
@@ -143,18 +171,26 @@ router.post("/aprobar/:idUser/:iddoc/:idflujo/:idtarea", async (req, res) => {
         );
         
         terminarTarea = await new aprobacionTarea(
-            req.params.idtarea,new Date(),2,'Terminada'
+            req.params.idtarea,new Date(),3,'Terminada'
         );
 
-        crearTareaN = await new crearTarea(
-            req.params.iddoc,req.params.idflujo,
-            info.recordset[0].ID_Revisor3,new Date(),'Se le ha asignado la tarea de revisión del documento: '+info.recordset[0].Nombre+'',1
-         );
+
+        crearTareaN = await new actualizarSiguienteTarea(
+            req.params.iddoc,
+            req.params.idflujo,
+            info.recordset[0].ID_Revisor3,
+            1
+        );
+
+        // crearTareaN = await new crearTarea(
+        //     req.params.iddoc,req.params.idflujo,
+        //     info.recordset[0].ID_Revisor3,new Date(),'Se le ha asignado la tarea de revisión del documento: '+info.recordset[0].Nombre+'',1
+        //  );
 
         }else{
             //Para finalizar el flujo, una vez que se apruebe 
             terminarTarea = await new aprobacionTarea(
-                req.params.idtarea,new Date(),2,'Terminada'
+                req.params.idtarea,new Date(),3,'Terminada'
             );
 
             terminarFlujo = await new finalizarFlujo(
